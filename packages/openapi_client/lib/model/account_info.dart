@@ -15,7 +15,7 @@ class AccountInfo {
   AccountInfo({
     this.validuntil,
     this.login = '',
-    this.options = {},
+    this.options = const {},
     this.valid = false,
     this.trafficleft,
     this.premium = false,
