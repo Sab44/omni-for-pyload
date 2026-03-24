@@ -55,10 +55,8 @@ class ApiCheckAndAddPackagesPostRequest {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ApiCheckAndAddPackagesPostRequest[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ApiCheckAndAddPackagesPostRequest[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'links'), 'Required key "ApiCheckAndAddPackagesPostRequest[links]" is missing from JSON.');
+        assert(json[r'links'] != null, 'Required key "ApiCheckAndAddPackagesPostRequest[links]" has a null value in JSON.');
         return true;
       }());
 

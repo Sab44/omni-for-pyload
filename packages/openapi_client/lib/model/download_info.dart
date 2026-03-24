@@ -143,10 +143,40 @@ class DownloadInfo {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "DownloadInfo[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "DownloadInfo[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'fid'), 'Required key "DownloadInfo[fid]" is missing from JSON.');
+        assert(json[r'fid'] != null, 'Required key "DownloadInfo[fid]" has a null value in JSON.');
+        assert(json.containsKey(r'name'), 'Required key "DownloadInfo[name]" is missing from JSON.');
+        assert(json[r'name'] != null, 'Required key "DownloadInfo[name]" has a null value in JSON.');
+        assert(json.containsKey(r'speed'), 'Required key "DownloadInfo[speed]" is missing from JSON.');
+        assert(json[r'speed'] != null, 'Required key "DownloadInfo[speed]" has a null value in JSON.');
+        assert(json.containsKey(r'eta'), 'Required key "DownloadInfo[eta]" is missing from JSON.');
+        assert(json[r'eta'] != null, 'Required key "DownloadInfo[eta]" has a null value in JSON.');
+        assert(json.containsKey(r'format_eta'), 'Required key "DownloadInfo[format_eta]" is missing from JSON.');
+        assert(json[r'format_eta'] != null, 'Required key "DownloadInfo[format_eta]" has a null value in JSON.');
+        assert(json.containsKey(r'bleft'), 'Required key "DownloadInfo[bleft]" is missing from JSON.');
+        assert(json[r'bleft'] != null, 'Required key "DownloadInfo[bleft]" has a null value in JSON.');
+        assert(json.containsKey(r'size'), 'Required key "DownloadInfo[size]" is missing from JSON.');
+        assert(json[r'size'] != null, 'Required key "DownloadInfo[size]" has a null value in JSON.');
+        assert(json.containsKey(r'format_size'), 'Required key "DownloadInfo[format_size]" is missing from JSON.');
+        assert(json[r'format_size'] != null, 'Required key "DownloadInfo[format_size]" has a null value in JSON.');
+        assert(json.containsKey(r'percent'), 'Required key "DownloadInfo[percent]" is missing from JSON.');
+        assert(json[r'percent'] != null, 'Required key "DownloadInfo[percent]" has a null value in JSON.');
+        assert(json.containsKey(r'status'), 'Required key "DownloadInfo[status]" is missing from JSON.');
+        assert(json[r'status'] != null, 'Required key "DownloadInfo[status]" has a null value in JSON.');
+        assert(json.containsKey(r'statusmsg'), 'Required key "DownloadInfo[statusmsg]" is missing from JSON.');
+        assert(json[r'statusmsg'] != null, 'Required key "DownloadInfo[statusmsg]" has a null value in JSON.');
+        assert(json.containsKey(r'format_wait'), 'Required key "DownloadInfo[format_wait]" is missing from JSON.');
+        assert(json[r'format_wait'] != null, 'Required key "DownloadInfo[format_wait]" has a null value in JSON.');
+        assert(json.containsKey(r'wait_until'), 'Required key "DownloadInfo[wait_until]" is missing from JSON.');
+        assert(json[r'wait_until'] != null, 'Required key "DownloadInfo[wait_until]" has a null value in JSON.');
+        assert(json.containsKey(r'package_id'), 'Required key "DownloadInfo[package_id]" is missing from JSON.');
+        assert(json[r'package_id'] != null, 'Required key "DownloadInfo[package_id]" has a null value in JSON.');
+        assert(json.containsKey(r'package_name'), 'Required key "DownloadInfo[package_name]" is missing from JSON.');
+        assert(json[r'package_name'] != null, 'Required key "DownloadInfo[package_name]" has a null value in JSON.');
+        assert(json.containsKey(r'plugin'), 'Required key "DownloadInfo[plugin]" is missing from JSON.');
+        assert(json[r'plugin'] != null, 'Required key "DownloadInfo[plugin]" has a null value in JSON.');
+        assert(json.containsKey(r'info'), 'Required key "DownloadInfo[info]" is missing from JSON.');
+        assert(json[r'info'] != null, 'Required key "DownloadInfo[info]" has a null value in JSON.');
         return true;
       }());
 

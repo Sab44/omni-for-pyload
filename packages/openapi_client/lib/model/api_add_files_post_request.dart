@@ -55,10 +55,10 @@ class ApiAddFilesPostRequest {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ApiAddFilesPostRequest[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ApiAddFilesPostRequest[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'package_id'), 'Required key "ApiAddFilesPostRequest[package_id]" is missing from JSON.');
+        assert(json[r'package_id'] != null, 'Required key "ApiAddFilesPostRequest[package_id]" has a null value in JSON.');
+        assert(json.containsKey(r'links'), 'Required key "ApiAddFilesPostRequest[links]" is missing from JSON.');
+        assert(json[r'links'] != null, 'Required key "ApiAddFilesPostRequest[links]" has a null value in JSON.');
         return true;
       }());
 

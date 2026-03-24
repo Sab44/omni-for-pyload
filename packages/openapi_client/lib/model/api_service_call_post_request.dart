@@ -63,16 +63,17 @@ class ApiServiceCallPostRequest {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ApiServiceCallPostRequest[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ApiServiceCallPostRequest[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'service_name'), 'Required key "ApiServiceCallPostRequest[service_name]" is missing from JSON.');
+        assert(json.containsKey(r'arguments'), 'Required key "ApiServiceCallPostRequest[arguments]" is missing from JSON.');
+        assert(json[r'arguments'] != null, 'Required key "ApiServiceCallPostRequest[arguments]" has a null value in JSON.');
         return true;
       }());
 
       return ApiServiceCallPostRequest(
         serviceName: mapValueOfType<String>(json, r'service_name'),
-        arguments: (json[r'arguments'] as List).map((e) => e as Object).toList(),
+        arguments: json[r'arguments'] is Iterable
+            ? (json[r'arguments'] as Iterable).cast<Object>().toList(growable: false)
+            : const [],
         parseArguments: mapValueOfType<bool>(json, r'parse_arguments') ?? false,
       );
     }

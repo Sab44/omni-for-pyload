@@ -95,10 +95,24 @@ class ServerStatus {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ServerStatus[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ServerStatus[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'pause'), 'Required key "ServerStatus[pause]" is missing from JSON.');
+        assert(json[r'pause'] != null, 'Required key "ServerStatus[pause]" has a null value in JSON.');
+        assert(json.containsKey(r'active'), 'Required key "ServerStatus[active]" is missing from JSON.');
+        assert(json[r'active'] != null, 'Required key "ServerStatus[active]" has a null value in JSON.');
+        assert(json.containsKey(r'queue'), 'Required key "ServerStatus[queue]" is missing from JSON.');
+        assert(json[r'queue'] != null, 'Required key "ServerStatus[queue]" has a null value in JSON.');
+        assert(json.containsKey(r'total'), 'Required key "ServerStatus[total]" is missing from JSON.');
+        assert(json[r'total'] != null, 'Required key "ServerStatus[total]" has a null value in JSON.');
+        assert(json.containsKey(r'speed'), 'Required key "ServerStatus[speed]" is missing from JSON.');
+        assert(json[r'speed'] != null, 'Required key "ServerStatus[speed]" has a null value in JSON.');
+        assert(json.containsKey(r'download'), 'Required key "ServerStatus[download]" is missing from JSON.');
+        assert(json[r'download'] != null, 'Required key "ServerStatus[download]" has a null value in JSON.');
+        assert(json.containsKey(r'reconnect'), 'Required key "ServerStatus[reconnect]" is missing from JSON.');
+        assert(json[r'reconnect'] != null, 'Required key "ServerStatus[reconnect]" has a null value in JSON.');
+        assert(json.containsKey(r'captcha'), 'Required key "ServerStatus[captcha]" is missing from JSON.');
+        assert(json[r'captcha'] != null, 'Required key "ServerStatus[captcha]" has a null value in JSON.');
+        assert(json.containsKey(r'proxy'), 'Required key "ServerStatus[proxy]" is missing from JSON.');
+        assert(json[r'proxy'] != null, 'Required key "ServerStatus[proxy]" has a null value in JSON.');
         return true;
       }());
 

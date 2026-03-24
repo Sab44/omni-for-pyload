@@ -107,10 +107,28 @@ class FileData {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "FileData[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "FileData[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'fid'), 'Required key "FileData[fid]" is missing from JSON.');
+        assert(json[r'fid'] != null, 'Required key "FileData[fid]" has a null value in JSON.');
+        assert(json.containsKey(r'url'), 'Required key "FileData[url]" is missing from JSON.');
+        assert(json[r'url'] != null, 'Required key "FileData[url]" has a null value in JSON.');
+        assert(json.containsKey(r'name'), 'Required key "FileData[name]" is missing from JSON.');
+        assert(json[r'name'] != null, 'Required key "FileData[name]" has a null value in JSON.');
+        assert(json.containsKey(r'plugin'), 'Required key "FileData[plugin]" is missing from JSON.');
+        assert(json[r'plugin'] != null, 'Required key "FileData[plugin]" has a null value in JSON.');
+        assert(json.containsKey(r'size'), 'Required key "FileData[size]" is missing from JSON.');
+        assert(json[r'size'] != null, 'Required key "FileData[size]" has a null value in JSON.');
+        assert(json.containsKey(r'format_size'), 'Required key "FileData[format_size]" is missing from JSON.');
+        assert(json[r'format_size'] != null, 'Required key "FileData[format_size]" has a null value in JSON.');
+        assert(json.containsKey(r'status'), 'Required key "FileData[status]" is missing from JSON.');
+        assert(json[r'status'] != null, 'Required key "FileData[status]" has a null value in JSON.');
+        assert(json.containsKey(r'statusmsg'), 'Required key "FileData[statusmsg]" is missing from JSON.');
+        assert(json[r'statusmsg'] != null, 'Required key "FileData[statusmsg]" has a null value in JSON.');
+        assert(json.containsKey(r'package_id'), 'Required key "FileData[package_id]" is missing from JSON.');
+        assert(json[r'package_id'] != null, 'Required key "FileData[package_id]" has a null value in JSON.');
+        assert(json.containsKey(r'error'), 'Required key "FileData[error]" is missing from JSON.');
+        assert(json[r'error'] != null, 'Required key "FileData[error]" has a null value in JSON.');
+        assert(json.containsKey(r'order'), 'Required key "FileData[order]" is missing from JSON.');
+        assert(json[r'order'] != null, 'Required key "FileData[order]" has a null value in JSON.');
         return true;
       }());
 

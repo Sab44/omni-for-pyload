@@ -53,10 +53,10 @@ class OnlineCheck {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "OnlineCheck[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "OnlineCheck[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'rid'), 'Required key "OnlineCheck[rid]" is missing from JSON.');
+        assert(json[r'rid'] != null, 'Required key "OnlineCheck[rid]" has a null value in JSON.');
+        assert(json.containsKey(r'data'), 'Required key "OnlineCheck[data]" is missing from JSON.');
+        assert(json[r'data'] != null, 'Required key "OnlineCheck[data]" has a null value in JSON.');
         return true;
       }());
 

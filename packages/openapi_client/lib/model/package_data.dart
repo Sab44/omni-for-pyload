@@ -143,10 +143,20 @@ class PackageData {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "PackageData[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "PackageData[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'pid'), 'Required key "PackageData[pid]" is missing from JSON.');
+        assert(json[r'pid'] != null, 'Required key "PackageData[pid]" has a null value in JSON.');
+        assert(json.containsKey(r'name'), 'Required key "PackageData[name]" is missing from JSON.');
+        assert(json[r'name'] != null, 'Required key "PackageData[name]" has a null value in JSON.');
+        assert(json.containsKey(r'folder'), 'Required key "PackageData[folder]" is missing from JSON.');
+        assert(json[r'folder'] != null, 'Required key "PackageData[folder]" has a null value in JSON.');
+        assert(json.containsKey(r'site'), 'Required key "PackageData[site]" is missing from JSON.');
+        assert(json[r'site'] != null, 'Required key "PackageData[site]" has a null value in JSON.');
+        assert(json.containsKey(r'password'), 'Required key "PackageData[password]" is missing from JSON.');
+        assert(json[r'password'] != null, 'Required key "PackageData[password]" has a null value in JSON.');
+        assert(json.containsKey(r'dest'), 'Required key "PackageData[dest]" is missing from JSON.');
+        assert(json[r'dest'] != null, 'Required key "PackageData[dest]" has a null value in JSON.');
+        assert(json.containsKey(r'order'), 'Required key "PackageData[order]" is missing from JSON.');
+        assert(json[r'order'] != null, 'Required key "PackageData[order]" has a null value in JSON.');
         return true;
       }());
 

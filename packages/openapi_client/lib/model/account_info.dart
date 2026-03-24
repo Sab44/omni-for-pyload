@@ -14,12 +14,12 @@ class AccountInfo {
   /// Returns a new [AccountInfo] instance.
   AccountInfo({
     this.validuntil,
-    required this.login,
-    required this.options,
-    required this.valid,
+    this.login = '',
+    this.options = {},
+    this.valid = false,
     this.trafficleft,
-    required this.premium,
-    required this.type,
+    this.premium = false,
+    this.type = '',
   });
 
   double? validuntil;
@@ -91,21 +91,17 @@ class AccountInfo {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "AccountInfo[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "AccountInfo[$key]" has a null value in JSON.');
-        });
         return true;
       }());
 
       return AccountInfo(
         validuntil: mapValueOfType<double>(json, r'validuntil'),
-        login: mapValueOfType<String>(json, r'login')!,
-        options: mapValueOfType<Object>(json, r'options')!,
-        valid: mapValueOfType<bool>(json, r'valid')!,
+        login: mapValueOfType<String>(json, r'login') ?? '',
+        options: mapValueOfType<Object>(json, r'options') ?? {},
+        valid: mapValueOfType<bool>(json, r'valid') ?? false,
         trafficleft: mapValueOfType<int>(json, r'trafficleft'),
-        premium: mapValueOfType<bool>(json, r'premium')!,
-        type: mapValueOfType<String>(json, r'type')!,
+        premium: mapValueOfType<bool>(json, r'premium') ?? false,
+        type: mapValueOfType<String>(json, r'type') ?? '',
       );
     }
     return null;
@@ -153,11 +149,6 @@ class AccountInfo {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'login',
-    'options',
-    'valid',
-    'premium',
-    'type',
   };
 }
 

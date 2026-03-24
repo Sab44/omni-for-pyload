@@ -48,10 +48,8 @@ class ApiDeletePackagesPostRequest {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ApiDeletePackagesPostRequest[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ApiDeletePackagesPostRequest[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'package_ids'), 'Required key "ApiDeletePackagesPostRequest[package_ids]" is missing from JSON.');
+        assert(json[r'package_ids'] != null, 'Required key "ApiDeletePackagesPostRequest[package_ids]" has a null value in JSON.');
         return true;
       }());
 

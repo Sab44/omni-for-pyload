@@ -75,10 +75,10 @@ class ApiSetConfigValuePostRequest {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ApiSetConfigValuePostRequest[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ApiSetConfigValuePostRequest[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'category'), 'Required key "ApiSetConfigValuePostRequest[category]" is missing from JSON.');
+        assert(json.containsKey(r'option'), 'Required key "ApiSetConfigValuePostRequest[option]" is missing from JSON.');
+        assert(json.containsKey(r'value'), 'Required key "ApiSetConfigValuePostRequest[value]" is missing from JSON.');
+        assert(json[r'value'] != null, 'Required key "ApiSetConfigValuePostRequest[value]" has a null value in JSON.');
         return true;
       }());
 

@@ -55,10 +55,10 @@ class ApiIsAuthorizedPostRequest {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ApiIsAuthorizedPostRequest[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ApiIsAuthorizedPostRequest[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'func_name'), 'Required key "ApiIsAuthorizedPostRequest[func_name]" is missing from JSON.');
+        assert(json[r'func_name'] != null, 'Required key "ApiIsAuthorizedPostRequest[func_name]" has a null value in JSON.');
+        assert(json.containsKey(r'userdata'), 'Required key "ApiIsAuthorizedPostRequest[userdata]" is missing from JSON.');
+        assert(json[r'userdata'] != null, 'Required key "ApiIsAuthorizedPostRequest[userdata]" has a null value in JSON.');
         return true;
       }());
 

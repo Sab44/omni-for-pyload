@@ -69,10 +69,13 @@ class ConfigSection {
       // Note 1: the values aren't checked for validity beyond being non-null.
       // Note 2: this code is stripped in release mode!
       assert(() {
-        requiredKeys.forEach((key) {
-          assert(json.containsKey(key), 'Required key "ConfigSection[$key]" is missing from JSON.');
-          assert(json[key] != null, 'Required key "ConfigSection[$key]" has a null value in JSON.');
-        });
+        assert(json.containsKey(r'name'), 'Required key "ConfigSection[name]" is missing from JSON.');
+        assert(json[r'name'] != null, 'Required key "ConfigSection[name]" has a null value in JSON.');
+        assert(json.containsKey(r'description'), 'Required key "ConfigSection[description]" is missing from JSON.');
+        assert(json[r'description'] != null, 'Required key "ConfigSection[description]" has a null value in JSON.');
+        assert(json.containsKey(r'items'), 'Required key "ConfigSection[items]" is missing from JSON.');
+        assert(json[r'items'] != null, 'Required key "ConfigSection[items]" has a null value in JSON.');
+        assert(json.containsKey(r'outline'), 'Required key "ConfigSection[outline]" is missing from JSON.');
         return true;
       }());
 
