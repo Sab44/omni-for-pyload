@@ -18,8 +18,7 @@ class AddServerViewModel {
     required String name,
     required String ip,
     required String port,
-    required String username,
-    required String password,
+    required String apiKey,
     required String protocol,
     required bool allowInsecureConnections,
   }) async {
@@ -43,14 +42,9 @@ class AddServerViewModel {
       throw 'Port must be between 1 and 65535';
     }
 
-    // Validate username
-    if (username.isEmpty) {
-      throw 'Username is required';
-    }
-
-    // Validate password
-    if (password.isEmpty) {
-      throw 'Password is required';
+    // Validate API key
+    if (apiKey.isEmpty) {
+      throw 'API Key is required';
     }
 
     // Check if server with same IP and port already exists
@@ -62,8 +56,7 @@ class AddServerViewModel {
     final server = Server(
       ip: ip,
       port: portNumber,
-      username: username,
-      password: password,
+      apiKey: apiKey,
       protocol: protocol,
       name: serverName,
       allowInsecure: allowInsecureConnections,

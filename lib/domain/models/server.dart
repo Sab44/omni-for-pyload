@@ -12,38 +12,34 @@ class Server extends HiveObject {
   late int port;
 
   @HiveField(2)
-  late String username;
+  late String apiKey;
 
   @HiveField(3)
-  late String password;
-
-  @HiveField(4)
   late String protocol;
 
-  @HiveField(5)
+  @HiveField(4)
   late String name;
 
-  @HiveField(6)
+  @HiveField(5)
   late bool allowInsecure;
 
   // Click'N'Load configuration (nullable - not configured by default)
-  @HiveField(7)
+  @HiveField(6)
   String? clickNLoadIp;
 
-  @HiveField(8)
+  @HiveField(7)
   int? clickNLoadPort;
 
-  @HiveField(9)
+  @HiveField(8)
   String? clickNLoadProtocol;
 
-  @HiveField(10)
+  @HiveField(9)
   bool? clickNLoadAllowInsecure;
 
   Server({
     required this.ip,
     required this.port,
-    required this.username,
-    required this.password,
+    required this.apiKey,
     required this.protocol,
     required this.allowInsecure,
     this.name = 'pyLoad',
@@ -102,8 +98,7 @@ class Server extends HiveObject {
   Server copyWith({
     String? ip,
     int? port,
-    String? username,
-    String? password,
+    String? apiKey,
     String? protocol,
     bool? allowInsecure,
     String? name,
@@ -115,8 +110,7 @@ class Server extends HiveObject {
     return Server(
       ip: ip ?? this.ip,
       port: port ?? this.port,
-      username: username ?? this.username,
-      password: password ?? this.password,
+      apiKey: apiKey ?? this.apiKey,
       protocol: protocol ?? this.protocol,
       allowInsecure: allowInsecure ?? this.allowInsecure,
       name: name ?? this.name,
@@ -131,8 +125,7 @@ class Server extends HiveObject {
   bool areMainConnectionParametersEqualTo(Server other) {
     return ip == other.ip &&
         port == other.port &&
-        username == other.username &&
-        password == other.password &&
+        apiKey == other.apiKey &&
         protocol == other.protocol &&
         allowInsecure == other.allowInsecure;
   }
@@ -144,8 +137,7 @@ class Server extends HiveObject {
           runtimeType == other.runtimeType &&
           ip == other.ip &&
           port == other.port &&
-          username == other.username &&
-          password == other.password &&
+          apiKey == other.apiKey &&
           protocol == other.protocol &&
           allowInsecure == other.allowInsecure &&
           name == other.name &&
@@ -158,8 +150,7 @@ class Server extends HiveObject {
   int get hashCode =>
       ip.hashCode ^
       port.hashCode ^
-      username.hashCode ^
-      password.hashCode ^
+      apiKey.hashCode ^
       protocol.hashCode ^
       allowInsecure.hashCode ^
       name.hashCode ^

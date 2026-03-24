@@ -30,8 +30,7 @@ void main() {
       server = Server(
         ip: '192.168.1.1',
         port: 8000,
-        username: 'user1',
-        password: 'pass1',
+        apiKey: 'test-api-key-1',
         protocol: 'http',
         allowInsecure: false,
       );
@@ -47,8 +46,7 @@ void main() {
         Server(
           ip: '192.168.1.2',
           port: 8001,
-          username: 'user2',
-          password: 'pass2',
+          apiKey: 'test-api-key-2',
           protocol: 'https',
           allowInsecure: true,
         ),

@@ -19,43 +19,40 @@ class ServerAdapter extends TypeAdapter<Server> {
     return Server(
       ip: fields[0] as String,
       port: fields[1] as int,
-      username: fields[2] as String,
-      password: fields[3] as String,
-      protocol: fields[4] as String,
-      allowInsecure: fields[6] as bool,
-      name: fields[5] as String,
-      clickNLoadIp: fields[7] as String?,
-      clickNLoadPort: fields[8] as int?,
-      clickNLoadProtocol: fields[9] as String?,
-      clickNLoadAllowInsecure: fields[10] as bool?,
+      apiKey: fields[2] as String,
+      protocol: fields[3] as String,
+      name: fields[4] as String,
+      allowInsecure: fields[5] as bool,
+      clickNLoadIp: fields[6] as String?,
+      clickNLoadPort: fields[7] as int?,
+      clickNLoadProtocol: fields[8] as String?,
+      clickNLoadAllowInsecure: fields[9] as bool?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Server obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.ip)
       ..writeByte(1)
       ..write(obj.port)
       ..writeByte(2)
-      ..write(obj.username)
+      ..write(obj.apiKey)
       ..writeByte(3)
-      ..write(obj.password)
-      ..writeByte(4)
       ..write(obj.protocol)
-      ..writeByte(5)
+      ..writeByte(4)
       ..write(obj.name)
-      ..writeByte(6)
+      ..writeByte(5)
       ..write(obj.allowInsecure)
-      ..writeByte(7)
+      ..writeByte(6)
       ..write(obj.clickNLoadIp)
-      ..writeByte(8)
+      ..writeByte(7)
       ..write(obj.clickNLoadPort)
-      ..writeByte(9)
+      ..writeByte(8)
       ..write(obj.clickNLoadProtocol)
-      ..writeByte(10)
+      ..writeByte(9)
       ..write(obj.clickNLoadAllowInsecure);
   }
 

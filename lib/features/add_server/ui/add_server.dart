@@ -19,8 +19,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
   final TextEditingController _portController = TextEditingController(
     text: '8000',
   );
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _apiKeyController = TextEditingController();
   late AddServerViewModel _viewModel;
   bool _isHttp = true;
   bool _allowInsecureConnections = false;
@@ -40,8 +39,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
     _nameController.dispose();
     _ipController.dispose();
     _portController.dispose();
-    _usernameController.dispose();
-    _passwordController.dispose();
+    _apiKeyController.dispose();
     super.dispose();
   }
 
@@ -73,8 +71,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
         name: _nameController.text.trim(),
         ip: _ipController.text.trim(),
         port: _portController.text.trim(),
-        username: _usernameController.text.trim(),
-        password: _passwordController.text,
+        apiKey: _apiKeyController.text.trim(),
         protocol: _isHttp ? "http" : "https",
         allowInsecureConnections: _allowInsecureConnections,
       );
@@ -205,19 +202,16 @@ class _AddServerScreenState extends State<AddServerScreen> {
                     ),
                   const SizedBox(height: 12),
                 ],
-                // Username
+                // API Key
                 TextFormField(
-                  controller: _usernameController,
-                  enabled: !_isLoading,
-                  decoration: const InputDecoration(labelText: 'Username'),
-                ),
-                const SizedBox(height: 12),
-                // Password
-                TextFormField(
-                  controller: _passwordController,
+                  controller: _apiKeyController,
                   enabled: !_isLoading,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  decoration: const InputDecoration(
+                    labelText: 'API Key',
+                    helperText:
+                        'Generate the API Key in your pyLoad instance\'s settings page.',
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // Add server button

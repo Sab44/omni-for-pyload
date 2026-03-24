@@ -17,7 +17,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
   /// Creates a new instance if the server configuration changes.
   ///
   /// Parameters:
-  /// - [server]: The server configuration with IP, port, username, and password
+  /// - [server]: The server configuration with IP, port and API key
   ///
   /// Returns a configured PyLoadRESTApi instance
   PyLoadRESTApi _configureApi(Server server) {
@@ -31,10 +31,9 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
 
     // Create API client with the server configuration and authentication
     final basePath = '${server.protocol}://${server.ip}:${server.port}';
-    final basicAuth = HttpBasicAuth();
-    basicAuth.username = server.username;
-    basicAuth.password = server.password;
-    final apiClient = ApiClient(basePath: basePath, authentication: basicAuth);
+    final apiKeyAuth = ApiKeyAuth('header', 'X-API-Key');
+    apiKeyAuth.apiKey = server.apiKey;
+    final apiClient = ApiClient(basePath: basePath, authentication: apiKeyAuth);
 
     // Inject custom client without certificate validation if user configured
     if (server.allowInsecure) {
@@ -76,7 +75,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
       if (e.code == 401) {
         throw ApiException(
           401,
-          'Authentication failed. Please check your username and password.',
+          'Authentication failed. Please check your API key.',
         );
       } else if (e.code >= 500) {
         throw ApiException(e.code, 'Server error: ${e.message}');

@@ -23,8 +23,7 @@ void main() {
       server = Server(
         ip: '192.168.1.100',
         port: 8000,
-        username: 'admin',
-        password: 'password',
+        apiKey: 'test-api-key',
         protocol: 'http',
         allowInsecure: false,
         name: 'Test Server',

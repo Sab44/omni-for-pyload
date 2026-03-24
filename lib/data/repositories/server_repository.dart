@@ -17,25 +17,6 @@ class ServerRepository implements IServerRepository {
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(ServerAdapter());
     }
-    // Migrate any existing credentials stored in Hive into secure storage
-    // This migration should be deleted eventually
-    try {
-      final box = await _getBox();
-      for (final key in box.keys) {
-        final server = box.get(key);
-        if (server != null &&
-            (server.username.isNotEmpty || server.password.isNotEmpty)) {
-          await _writeCredentials(
-            server.ip,
-            server.port,
-            server.username,
-            server.password,
-          );
-          final safeServer = server.copyWith(username: '', password: '');
-          await box.put(key, safeServer);
-        }
-      }
-    } catch (_) {}
   }
 
   Future<Box<Server>> _getBox() async {
@@ -51,15 +32,12 @@ class ServerRepository implements IServerRepository {
     final box = await _getBox();
     final servers = box.values.toList();
 
-    // Reattach credentials from secure storage
+    // Reattach API key from secure storage
     for (var i = 0; i < servers.length; i++) {
       final server = servers[i];
-      final cred = await _readCredentials(server.ip, server.port);
-      if (cred != null) {
-        servers[i] = server.copyWith(
-          username: cred['username'],
-          password: cred['password'],
-        );
+      final apiKey = await _readApiKey(server.ip, server.port);
+      if (apiKey != null) {
+        servers[i] = server.copyWith(apiKey: apiKey);
       }
     }
 
@@ -71,14 +49,9 @@ class ServerRepository implements IServerRepository {
   Future<void> addServer(Server server) async {
     final box = await _getBox();
     final key = '${server.ip}:${server.port}';
-    // Store credentials in secure storage and write server without credentials to Hive
-    await _writeCredentials(
-      server.ip,
-      server.port,
-      server.username,
-      server.password,
-    );
-    final safeServer = server.copyWith(username: '', password: '');
+    // Store API key in secure storage and write server without API key to Hive
+    await _writeApiKey(server.ip, server.port, server.apiKey);
+    final safeServer = server.copyWith(apiKey: '');
     await box.put(key, safeServer);
   }
 
@@ -93,10 +66,10 @@ class ServerRepository implements IServerRepository {
   @override
   Future<void> removeServer(String ip, int port) async {
     final box = await _getBox();
-    final key = '${ip}:${port}';
-    // Remove credentials stored for this server
+    final key = '$ip:$port';
+    // Remove API key stored for this server
     try {
-      await _deleteCredentials(ip, port);
+      await _deleteApiKey(ip, port);
     } catch (_) {}
 
     await box.delete(key);
@@ -107,14 +80,9 @@ class ServerRepository implements IServerRepository {
   Future<void> updateServer(Server server) async {
     final box = await _getBox();
     final key = '${server.ip}:${server.port}';
-    // Update credentials in secure storage and update Hive with safe server
-    await _writeCredentials(
-      server.ip,
-      server.port,
-      server.username,
-      server.password,
-    );
-    final safeServer = server.copyWith(username: '', password: '');
+    // Update API key in secure storage and update Hive with safe server
+    await _writeApiKey(server.ip, server.port, server.apiKey);
+    final safeServer = server.copyWith(apiKey: '');
     await box.put(key, safeServer);
   }
 
@@ -122,9 +90,9 @@ class ServerRepository implements IServerRepository {
   @override
   Future<void> clearAllServers() async {
     final box = await _getBox();
-    // Delete credentials for all stored servers
+    // Delete API keys for all stored servers
     for (final server in box.values) {
-      await _deleteCredentials(server.ip, server.port);
+      await _deleteApiKey(server.ip, server.port);
     }
     await box.clear();
   }
@@ -132,33 +100,24 @@ class ServerRepository implements IServerRepository {
   /// Secure storage helpers
   String _secureKey(String ip, int port) => '$_securePrefix$ip:$port';
 
-  Future<void> _writeCredentials(
-    String ip,
-    int port,
-    String username,
-    String password,
-  ) async {
+  Future<void> _writeApiKey(String ip, int port, String apiKey) async {
     final key = _secureKey(ip, port);
-    final map = {'username': username, 'password': password};
-    await _secureStorage.write(key: key, value: jsonEncode(map));
+    await _secureStorage.write(key: key, value: jsonEncode({'apiKey': apiKey}));
   }
 
-  Future<Map<String, String>?> _readCredentials(String ip, int port) async {
+  Future<String?> _readApiKey(String ip, int port) async {
     final key = _secureKey(ip, port);
     final val = await _secureStorage.read(key: key);
     if (val == null) return null;
     try {
       final decoded = jsonDecode(val) as Map<String, dynamic>;
-      return {
-        'username': decoded['username'] as String? ?? '',
-        'password': decoded['password'] as String? ?? '',
-      };
+      return decoded['apiKey'] as String?;
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> _deleteCredentials(String ip, int port) async {
+  Future<void> _deleteApiKey(String ip, int port) async {
     final key = _secureKey(ip, port);
     await _secureStorage.delete(key: key);
   }

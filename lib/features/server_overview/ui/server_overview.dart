@@ -229,7 +229,7 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('User: ${server.username}'),
+                                const Text('Auth: API Key'),
                                 Text(
                                   'Status: $status',
                                   style: TextStyle(color: statusColor),

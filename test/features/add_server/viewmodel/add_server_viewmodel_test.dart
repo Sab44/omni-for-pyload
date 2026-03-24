@@ -30,8 +30,7 @@ void main() {
           name: 'Test Server',
           ip: '',
           port: '8000',
-          username: 'user',
-          password: 'pass',
+          apiKey: 'test-api-key',
           protocol: 'http',
           allowInsecureConnections: false,
         ),
@@ -51,8 +50,7 @@ void main() {
           name: 'Test Server',
           ip: '192.168.1.1',
           port: 'invalid',
-          username: 'user',
-          password: 'pass',
+          apiKey: 'test-api-key',
           protocol: 'http',
           allowInsecureConnections: false,
         ),
@@ -74,8 +72,7 @@ void main() {
             name: 'Test Server',
             ip: '192.168.1.1',
             port: '99999',
-            username: 'user',
-            password: 'pass',
+            apiKey: 'test-api-key',
             protocol: 'http',
             allowInsecureConnections: false,
           ),
@@ -90,14 +87,13 @@ void main() {
       },
     );
 
-    test('validateAndAddServer throws error when username is empty', () async {
+    test('validateAndAddServer throws error when apiKey is empty', () async {
       expect(
         () => viewModel.validateAndAddServer(
           name: 'Test Server',
           ip: '192.168.1.1',
           port: '8000',
-          username: '',
-          password: 'pass',
+          apiKey: '',
           protocol: 'http',
           allowInsecureConnections: false,
         ),
@@ -105,28 +101,7 @@ void main() {
           isA<String>().having(
             (msg) => msg,
             'message',
-            contains('Username is required'),
-          ),
-        ),
-      );
-    });
-
-    test('validateAndAddServer throws error when password is empty', () async {
-      expect(
-        () => viewModel.validateAndAddServer(
-          name: 'Test Server',
-          ip: '192.168.1.1',
-          port: '8000',
-          username: 'user',
-          password: '',
-          protocol: 'http',
-          allowInsecureConnections: false,
-        ),
-        throwsA(
-          isA<String>().having(
-            (msg) => msg,
-            'message',
-            contains('Password is required'),
+            contains('API Key is required'),
           ),
         ),
       );
@@ -144,8 +119,7 @@ void main() {
             name: 'Test Server',
             ip: '192.168.1.1',
             port: '8000',
-            username: 'user',
-            password: 'pass',
+            apiKey: 'test-api-key',
             protocol: 'http',
             allowInsecureConnections: false,
           ),
@@ -189,16 +163,14 @@ void main() {
           name: 'Test Server',
           ip: '192.168.1.1',
           port: '8000',
-          username: 'user',
-          password: 'pass',
+          apiKey: 'test-api-key',
           protocol: 'https',
           allowInsecureConnections: true,
         );
 
         expect(server.ip, '192.168.1.1');
         expect(server.port, 8000);
-        expect(server.username, 'user');
-        expect(server.password, 'pass');
+        expect(server.apiKey, 'test-api-key');
         expect(server.protocol, 'https');
         expect(server.allowInsecure, true);
         expect(server.name, 'Test Server');
@@ -234,8 +206,7 @@ void main() {
         name: '',
         ip: '192.168.1.1',
         port: '8000',
-        username: 'user',
-        password: 'pass',
+        apiKey: 'test-api-key',
         protocol: 'http',
         allowInsecureConnections: false,
       );
@@ -272,8 +243,7 @@ void main() {
           name: '   ',
           ip: '192.168.1.1',
           port: '8000',
-          username: 'user',
-          password: 'pass',
+          apiKey: 'test-api-key',
           protocol: 'http',
           allowInsecureConnections: false,
         );
@@ -311,8 +281,7 @@ void main() {
         name: '  My Server  ',
         ip: '192.168.1.1',
         port: '8000',
-        username: 'user',
-        password: 'pass',
+        apiKey: 'test-api-key',
         protocol: 'http',
         allowInsecureConnections: false,
       );
@@ -345,8 +314,7 @@ void main() {
           name: 'Test Server',
           ip: '192.168.1.1',
           port: '8000',
-          username: 'user',
-          password: 'pass',
+          apiKey: 'test-api-key',
           protocol: 'http',
           allowInsecureConnections: false,
         );
@@ -363,8 +331,7 @@ void main() {
           name: 'Test Server',
           ip: '192.168.1.1',
           port: '0',
-          username: 'user',
-          password: 'pass',
+          apiKey: 'test-api-key',
           protocol: 'http',
           allowInsecureConnections: false,
         ),
@@ -384,8 +351,7 @@ void main() {
           name: 'Test Server',
           ip: '192.168.1.1',
           port: '65536',
-          username: 'user',
-          password: 'pass',
+          apiKey: 'test-api-key',
           protocol: 'http',
           allowInsecureConnections: false,
         ),
