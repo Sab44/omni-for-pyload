@@ -2,9 +2,6 @@ import 'package:omni_for_pyload/domain/models/server.dart';
 
 /// Interface for server storage and retrieval
 abstract class IServerRepository {
-  /// Initialize the server repository (setup Hive, register adapters, etc.)
-  Future<void> initialize();
-
   /// Get all servers from local storage
   Future<List<Server>> getAllServers();
 

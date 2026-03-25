@@ -11,9 +11,7 @@ final getIt = GetIt.instance;
 /// Registers all dependencies for the application
 Future<void> setupServiceLocator() async {
   // Register repositories
-  final serverRepository = ServerRepository();
-  await serverRepository.initialize();
-  getIt.registerSingleton<IServerRepository>(serverRepository);
+  getIt.registerSingleton<IServerRepository>(ServerRepository());
 
   getIt.registerSingleton<IPyLoadApiRepository>(PyLoadApiRepository());
 

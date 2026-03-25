@@ -1,39 +1,25 @@
-import 'package:hive/hive.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 
-part 'server.g.dart';
-
-@HiveType(typeId: 0)
-class Server extends HiveObject {
-  @HiveField(0)
+class Server {
   late String ip;
 
-  @HiveField(1)
   late int port;
 
-  @HiveField(2)
   late String apiKey;
 
-  @HiveField(3)
   late String protocol;
 
-  @HiveField(4)
   late String name;
 
-  @HiveField(5)
   late bool allowInsecure;
 
   // Click'N'Load configuration (nullable - not configured by default)
-  @HiveField(6)
   String? clickNLoadIp;
 
-  @HiveField(7)
   int? clickNLoadPort;
 
-  @HiveField(8)
   String? clickNLoadProtocol;
 
-  @HiveField(9)
   bool? clickNLoadAllowInsecure;
 
   Server({
@@ -128,6 +114,36 @@ class Server extends HiveObject {
         apiKey == other.apiKey &&
         protocol == other.protocol &&
         allowInsecure == other.allowInsecure;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'ip': ip,
+      'port': port,
+      'apiKey': apiKey,
+      'protocol': protocol,
+      'name': name,
+      'allowInsecure': allowInsecure,
+      'clickNLoadIp': clickNLoadIp,
+      'clickNLoadPort': clickNLoadPort,
+      'clickNLoadProtocol': clickNLoadProtocol,
+      'clickNLoadAllowInsecure': clickNLoadAllowInsecure,
+    };
+  }
+
+  factory Server.fromJson(Map<String, dynamic> json) {
+    return Server(
+      ip: json['ip'] as String,
+      port: json['port'] as int,
+      apiKey: json['apiKey'] as String,
+      protocol: json['protocol'] as String,
+      name: json['name'] as String? ?? 'pyLoad',
+      allowInsecure: json['allowInsecure'] as bool? ?? false,
+      clickNLoadIp: json['clickNLoadIp'] as String?,
+      clickNLoadPort: json['clickNLoadPort'] as int?,
+      clickNLoadProtocol: json['clickNLoadProtocol'] as String?,
+      clickNLoadAllowInsecure: json['clickNLoadAllowInsecure'] as bool?,
+    );
   }
 
   @override

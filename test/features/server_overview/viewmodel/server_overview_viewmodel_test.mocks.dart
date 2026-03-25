@@ -55,16 +55,6 @@ class MockIServerRepository extends _i1.Mock implements _i3.IServerRepository {
   }
 
   @override
-  _i4.Future<void> initialize() => (super.noSuchMethod(
-        Invocation.method(
-          #initialize,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
-
-  @override
   _i4.Future<List<_i5.Server>> getAllServers() => (super.noSuchMethod(
         Invocation.method(
           #getAllServers,
