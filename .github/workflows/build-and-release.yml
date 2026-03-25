@@ -2,6 +2,11 @@ name: Build and Release App
 
 on:
   workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Create as prerelease?'
+        required: false
+        default: 'false'
 
 jobs:
   build-android:
@@ -116,4 +121,4 @@ jobs:
             artifacts/omni_for_pyload-${{ needs.build-android.outputs.version }}.apk
             artifacts/omni_for_pyload-${{ needs.build-android.outputs.version }}.ipa
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
