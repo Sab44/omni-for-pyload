@@ -229,7 +229,12 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Auth: API Key'),
+                                Text(
+                                  'API Key: ${server.apiKey.toRedacted()}',
+                                  style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
                                 Text(
                                   'Status: $status',
                                   style: TextStyle(color: statusColor),
@@ -330,5 +335,17 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
       default:
         return Colors.grey;
     }
+  }
+}
+
+extension APIKeyRedaction on String {
+  /// Redacts the api key showing the first 3 and last 4 characters.
+  String toRedacted() {
+    if (length <= 7) return this;
+
+    final prefix = substring(0, 3);
+    final suffix = substring(length - 4);
+
+    return '$prefix•••$suffix';
   }
 }
