@@ -21,6 +21,14 @@
             ],
             "versions": [
                 {
+                    "version": "0.2.0",
+                    "date": "2026-03-26T12:25:00+01:00",
+                    "size": 8509327,
+                    "downloadURL": "https://github.com/Sab44/omni-for-pyload/releases/download/v0.2.0/omni_for_pyload-0.2.0.ipa",
+                    "localizedDescription": "BREAKING CHANGE: Added API key support.\n\nWith the introduction of API keys in pyLoad, this version clears all configured servers from the app and requires you to re-add them with an API key instead of username & password authentication.\n\nAfter updating pyLoad to the most recent version, you can create an API key under:\nSettings → Users → Actions → Manage API Keys",
+                    "minOSVersion": "13.0"
+                },
+                {
                   "version": "0.1.3",
                   "date": "2026-02-14T19:45:00+01:00",
                   "size": 8523407,
