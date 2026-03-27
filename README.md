@@ -6,12 +6,12 @@ Omni is an app to manage downloads for your [pyLoad](https://github.com/pyload/p
 It is available for both Android and iOS.
 
 > [!IMPORTANT]
-> This app is currently in alpha. Expect to run into bugs.
-If you encounter a bug, check the known issues section first and create 
+> This app is in beta. If you encounter a bug, check the known issues section first and create 
 an [issue](https://github.com/Sab44/omni_for_pyload/issues) if it is not listed there.
 
 > [!WARNING]
-> This app requires your pyLoad instance to be on version `0.5.0b3.dev94` or newer.
+> Starting from version `0.2.0`, a pyLoad version of `0.5.0b3.dev97` or newer is required and you need to [create an API key](#Generate-an-API-key) when adding a server.  
+> Versions `0.1.x` require a minimum pyLoad version of `0.5.0b3.dev94`. These app versions are deprecated and will be removed in the future.
 
 ## Screenshots
 
@@ -86,6 +86,12 @@ https://github.com/Sab44/omni_for_pyload/raw/refs/heads/main/ios/AltStoreSource.
 ```
 
 Alternatively, install the IPA from the releases section manually (e.g. via Sideloadly).
+
+### Generate an API key
+
+You need an API key to connect the app to your pyLoad instance. Open pyLoad in your browser and navigate to:  
+**Settings** → **Users** → Next to your username tap on **Actions** → **Manage API Keys** → **Generate**.  
+Make sure to copy the API key when it is shown as you will not be able to view it again after closing the dialog.
 
 ## Known limitations
 
