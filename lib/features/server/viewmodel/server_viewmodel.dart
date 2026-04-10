@@ -427,15 +427,27 @@ class ServerViewModel extends ChangeNotifier {
   /// - [fileBytes]: The file content as bytes
   ///
   /// Returns true if upload was successful, false otherwise
-  Future<bool> uploadDlc(String fileName, List<int> fileBytes) async {
+  Future<bool> uploadDlc(
+    String fileName,
+    List<int> fileBytes,
+    Destination destination,
+  ) async {
     try {
-      await _pyLoadApiRepository.uploadContainer(server, fileName, fileBytes);
+      await _pyLoadApiRepository.uploadContainer(
+        server,
+        fileName,
+        fileBytes,
+        destination,
+      );
 
       // Wait for pyLoad to process the DLC
       await Future.delayed(const Duration(seconds: 1));
 
-      // Refresh the collector tab since new packages may appear there
-      if (_selectedTabIndex == 2) {
+      // Refresh the appropriate tab based on destination
+      if (destination == Destination.QUEUE && _selectedTabIndex == 1) {
+        _fetchQueueData();
+      } else if (destination == Destination.COLLECTOR &&
+          _selectedTabIndex == 2) {
         _fetchCollectorData();
       }
       return true;

@@ -354,6 +354,7 @@ class MockIPyLoadApiRepository extends _i1.Mock
     _i5.Server? server,
     String? fileName,
     List<int>? fileBytes,
+    _i2.Destination? destination,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -362,6 +363,7 @@ class MockIPyLoadApiRepository extends _i1.Mock
             server,
             fileName,
             fileBytes,
+            destination,
           ],
         ),
         returnValue: _i4.Future<void>.value(),

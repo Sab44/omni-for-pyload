@@ -666,8 +666,12 @@ class _ServerScreenState extends State<ServerScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => UploadDlcBottomSheet(
-        onUpload: (fileName, fileBytes) async {
-          final success = await _viewModel.uploadDlc(fileName, fileBytes);
+        onUpload: (fileName, fileBytes, destination) async {
+          final success = await _viewModel.uploadDlc(
+            fileName,
+            fileBytes,
+            destination,
+          );
           if (mounted) {
             _showSnackBar(
               success ? 'Success: DLC uploaded' : 'Error: Failed to upload DLC',

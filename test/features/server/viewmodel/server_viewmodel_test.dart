@@ -308,7 +308,12 @@ void main() {
     test('uploadDlc calls uploadContainer', () async {
       final bytes = [1, 2, 3];
       when(
-        mockPyLoadApiRepository.uploadContainer(server, 'test.dlc', bytes),
+        mockPyLoadApiRepository.uploadContainer(
+          server,
+          'test.dlc',
+          bytes,
+          Destination.COLLECTOR,
+        ),
       ).thenAnswer((_) async => {});
 
       // If tab is 2 (Collector), it refreshes
@@ -317,11 +322,20 @@ void main() {
         mockPyLoadApiRepository.getCollector(server),
       ).thenAnswer((_) async => []);
 
-      final result = await viewModel.uploadDlc('test.dlc', bytes);
+      final result = await viewModel.uploadDlc(
+        'test.dlc',
+        bytes,
+        Destination.COLLECTOR,
+      );
 
       expect(result, true);
       verify(
-        mockPyLoadApiRepository.uploadContainer(server, 'test.dlc', bytes),
+        mockPyLoadApiRepository.uploadContainer(
+          server,
+          'test.dlc',
+          bytes,
+          Destination.COLLECTOR,
+        ),
       ).called(1);
       // Verify refresh happened (called twice: once for tab select, once for upload refresh)
       verify(mockPyLoadApiRepository.getCollector(server)).called(2);

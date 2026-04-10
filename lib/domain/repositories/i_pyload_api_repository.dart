@@ -106,6 +106,7 @@ abstract class IPyLoadApiRepository {
     Server server,
     String fileName,
     List<int> fileBytes,
+    Destination destination,
   );
 
   /// Adds a new package with links to the server

@@ -308,6 +308,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
     Server server,
     String fileName,
     List<int> fileBytes,
+    Destination destination,
   ) async {
     final api = _configureApi(server);
     final multipartFile = http.MultipartFile.fromBytes(
@@ -316,7 +317,11 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
       filename: fileName,
     );
     await executeNetworkRequest(
-      () => api.apiUploadContainerPost(fileName, multipartFile),
+      () => api.apiUploadContainerPost(
+        fileName,
+        multipartFile,
+        dest: destination,
+      ),
     );
   }
 

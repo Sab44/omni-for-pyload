@@ -2,11 +2,17 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:openapi_client/api.dart';
 import 'package:omni_for_pyload/features/error_dialog/ui/error_dialog.dart';
 
 /// Bottom sheet widget for uploading DLC files.
 class UploadDlcBottomSheet extends StatefulWidget {
-  final Future<void> Function(String fileName, List<int> fileBytes) onUpload;
+  final Future<void> Function(
+    String fileName,
+    List<int> fileBytes,
+    Destination destination,
+  )
+  onUpload;
 
   const UploadDlcBottomSheet({required this.onUpload, super.key});
 
@@ -19,6 +25,7 @@ class _UploadDlcBottomSheetState extends State<UploadDlcBottomSheet> {
 
   String? _selectedFileName;
   List<int>? _selectedFileBytes;
+  Destination _selectedDestination = Destination.QUEUE;
   bool _isUploading = false;
 
   Future<void> _pickFile() async {
@@ -79,7 +86,11 @@ class _UploadDlcBottomSheetState extends State<UploadDlcBottomSheet> {
 
     setState(() => _isUploading = true);
 
-    await widget.onUpload(_selectedFileName!, _selectedFileBytes!);
+    await widget.onUpload(
+      _selectedFileName!,
+      _selectedFileBytes!,
+      _selectedDestination,
+    );
 
     if (mounted) {
       Navigator.pop(context);
@@ -166,6 +177,36 @@ class _UploadDlcBottomSheetState extends State<UploadDlcBottomSheet> {
                 ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
+            const SizedBox(height: 24),
+            Text('Destination', style: Theme.of(context).textTheme.titleMedium),
+            RadioGroup<Destination>(
+              groupValue: _selectedDestination,
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedDestination = value);
+                }
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<Destination>(
+                      title: const Text('Queue'),
+                      value: Destination.QUEUE,
+                      contentPadding: EdgeInsets.zero,
+                      enabled: !_isUploading,
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<Destination>(
+                      title: const Text('Collector'),
+                      value: Destination.COLLECTOR,
+                      contentPadding: EdgeInsets.zero,
+                      enabled: !_isUploading,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
             // Upload button
             ElevatedButton(
