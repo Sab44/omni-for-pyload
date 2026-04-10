@@ -26,7 +26,7 @@ class ApiSetConfigValuePostRequest {
   /// new config value
   Object value;
 
-  /// 'plugin' or 'core
+  /// 'plugin' or 'core'
   String section;
 
   @override

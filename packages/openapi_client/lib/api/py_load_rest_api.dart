@@ -520,9 +520,9 @@ class PyLoadRESTApi {
     return null;
   }
 
-  /// Gets urls and returns pluginname mapped to list of matched urls.
+  /// Gets urls and returns plugin name mapped to list of matched urls.
   ///
-  /// Gets urls and returns pluginname mapped to list of matched urls.
+  /// Gets urls and returns plugin name mapped to list of matched urls.
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -554,9 +554,9 @@ class PyLoadRESTApi {
     );
   }
 
-  /// Gets urls and returns pluginname mapped to list of matched urls.
+  /// Gets urls and returns plugin name mapped to list of matched urls.
   ///
-  /// Gets urls and returns pluginname mapped to list of matched urls.
+  /// Gets urls and returns plugin name mapped to list of matched urls.
   ///
   /// Parameters:
   ///
@@ -4437,7 +4437,10 @@ class PyLoadRESTApi {
   ///
   /// * [MultipartFile] data (required):
   ///   file content
-  Future<Response> apiUploadContainerPostWithHttpInfo(String filename, MultipartFile data,) async {
+  ///
+  /// * [Destination] dest:
+  ///   `Destination`
+  Future<Response> apiUploadContainerPostWithHttpInfo(String filename, MultipartFile data, { Destination? dest, }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/upload_container';
 
@@ -4459,6 +4462,10 @@ class PyLoadRESTApi {
     if (data != null) {
       hasFields = true;
       mp.files.add(data);
+    }
+    if (dest != null) {
+      hasFields = true;
+      mp.fields[r'dest'] = parameterToString(dest);
     }
     if (hasFields) {
       postBody = mp;
@@ -4486,8 +4493,11 @@ class PyLoadRESTApi {
   ///
   /// * [MultipartFile] data (required):
   ///   file content
-  Future<void> apiUploadContainerPost(String filename, MultipartFile data,) async {
-    final response = await apiUploadContainerPostWithHttpInfo(filename, data,);
+  ///
+  /// * [Destination] dest:
+  ///   `Destination`
+  Future<void> apiUploadContainerPost(String filename, MultipartFile data, { Destination? dest, }) async {
+    final response = await apiUploadContainerPostWithHttpInfo(filename, data,  dest: dest, );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
