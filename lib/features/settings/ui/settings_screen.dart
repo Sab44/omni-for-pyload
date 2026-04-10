@@ -13,7 +13,11 @@ class SettingsScreen extends StatefulWidget {
   final Server? server;
   final Future<void> Function()? onClickNLoadConfigChanged;
 
-  const SettingsScreen({super.key, this.server, this.onClickNLoadConfigChanged});
+  const SettingsScreen({
+    super.key,
+    this.server,
+    this.onClickNLoadConfigChanged,
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -50,34 +54,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: const Text('Settings'),
-          centerTitle: true,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // App Settings Section
-            _buildSectionTitle('App settings'),
-            const SizedBox(height: 12),
-            _buildThemeOption(),
-            const SizedBox(height: 16),
-            _buildSkipSelectionOption(),
-            const SizedBox(height: 32),
+        title: const Text('Settings'),
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          // App Settings Section
+          _buildSectionTitle('App settings'),
+          const SizedBox(height: 12),
+          _buildThemeOption(),
+          const SizedBox(height: 16),
+          _buildSkipSelectionOption(),
+          const SizedBox(height: 32),
 
-            // Server Settings Section (only show when opened from ServerScreen on Android)
-            if (_viewModel.hasServerContext && Platform.isAndroid) ...[
-              _buildSectionTitle('Server settings'),
-              const SizedBox(height: 12),
-              _buildClickNLoadOption(),
-            ],
+          // Server Settings Section (only show when opened from ServerScreen on Android)
+          if (_viewModel.hasServerContext && Platform.isAndroid) ...[
+            _buildSectionTitle('Server settings'),
+            const SizedBox(height: 12),
+            _buildClickNLoadOption(),
           ],
-        ),
-      );
+        ],
+      ),
+    );
   }
 
   Widget _buildSectionTitle(String title) {

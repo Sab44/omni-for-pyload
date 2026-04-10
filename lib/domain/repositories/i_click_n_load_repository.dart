@@ -8,10 +8,7 @@ abstract class IClickNLoadRepository {
     Object? body,
   });
 
-  Future<http.Response> add({
-    Map<String, String>? headers,
-    Object? body,
-  });
+  Future<http.Response> add({Map<String, String>? headers, Object? body});
 
   Future<http.Response> addCrypted({
     Map<String, String>? headers,

@@ -22,7 +22,9 @@ class ClickNLoadRepository implements IClickNLoadRepository {
     Map<String, String>? headers,
     Object? body,
   }) async {
-    final uri = Uri.parse('${_server.protocol}://${_server.ip}:${_server.port}$path');
+    final uri = Uri.parse(
+      '${_server.protocol}://${_server.ip}:${_server.port}$path',
+    );
 
     // Filter headers if necessary, but for now forward most
     // We might want to remove 'host' or 'content-length' as the client will set them
@@ -85,16 +87,8 @@ class ClickNLoadRepository implements IClickNLoadRepository {
   }
 
   @override
-  Future<http.Response> add({
-    Map<String, String>? headers,
-    Object? body,
-  }) {
-    return _forward(
-      '/flash/add',
-      method: 'POST',
-      headers: headers,
-      body: body,
-    );
+  Future<http.Response> add({Map<String, String>? headers, Object? body}) {
+    return _forward('/flash/add', method: 'POST', headers: headers, body: body);
   }
 
   @override

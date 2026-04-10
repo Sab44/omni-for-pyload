@@ -81,7 +81,7 @@ class ServerRepository implements IServerRepository {
     final prefs = await SharedPreferences.getInstance();
     final currentServers = await getAllServers();
     final index = currentServers.indexWhere(
-      (s) => s.ip == server.ip && s.port == server.port
+      (s) => s.ip == server.ip && s.port == server.port,
     );
     if (index != -1) {
       // Update API key in secure storage and update server in list
