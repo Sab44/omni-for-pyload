@@ -21,6 +21,14 @@
             ],
             "versions": [
                 {
+                    "version": "0.2.1",
+                    "date": "2026-04-21T19:44:00+02:00",
+                    "size": 8508557,
+                    "downloadURL": "https://github.com/Sab44/omni-for-pyload/releases/download/v0.2.1/omni_for_pyload-0.2.1.ipa",
+                    "localizedDescription": "New feature: Added possibility to pick upload location (queue or collector) when uploading dlc files. Note that uploading dlc files now requires a pyLoad version of 0.5.0b3.dev98 or newer.",
+                    "minOSVersion": "13.0"
+                },
+                {
                     "version": "0.2.0",
                     "date": "2026-03-26T12:25:00+01:00",
                     "size": 8509327,
