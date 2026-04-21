@@ -35,30 +35,6 @@
                   "downloadURL": "https://github.com/Sab44/omni_for_pyload/releases/download/v0.1.3/omni_for_pyload-0.1.3.ipa",
                   "localizedDescription": "Fixed authentication if initial credentials were wrong.",
                   "minOSVersion": "13.0"
-                },
-                {
-                    "version": "0.1.2",
-                    "date": "2026-01-30T14:26:00+01:00",
-                    "size": 8447677,
-                    "downloadURL": "https://github.com/Sab44/omni_for_pyload/releases/download/v0.1.2/omni_for_pyload-0.1.2.ipa",
-                    "localizedDescription": "First alpha release, minor update 2.",
-                    "minOSVersion": "13.0"
-                },
-                {
-                    "version": "0.1.1",
-                    "date": "2026-01-21T10:59:00+01:00",
-                    "size": 8390317,
-                    "downloadURL": "https://github.com/Sab44/omni_for_pyload/releases/download/v0.1.1/omni_for_pyload-0.1.1.ipa",
-                    "localizedDescription": "First alpha release, minor update 1.",
-                    "minOSVersion": "13.0"
-                },
-                {
-                    "version": "0.1.0",
-                    "date": "2026-01-21T10:59:00+01:00",
-                    "size": 8390254,
-                    "downloadURL": "https://github.com/Sab44/omni_for_pyload/releases/download/v0.1.0/omni_for_pyload-0.1.0.ipa",
-                    "localizedDescription": "First alpha release.",
-                    "minOSVersion": "13.0"
                 }
             ],
             "appPermissions": {
