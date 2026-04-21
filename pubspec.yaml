@@ -1,7 +1,7 @@
 name: omni_for_pyload
 description: "Your all-in-one mobile app for pyLoad."
 publish_to: 'none'
-version: 0.2.0
+version: 0.2.1
 
 environment:
   sdk: ^3.9.2
