@@ -82,7 +82,7 @@ Recommended: install via [AltStore](https://altstore.io) or [SideStore](https://
 
 [<img src="./assets/badges/badge_sidestore.png"
 alt="Get it on SideStore"
-height="80">][sidestore-source]
+height="90">][sidestore-source]
 
 Or, add AltStore source manually:
 ```
