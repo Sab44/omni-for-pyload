@@ -74,11 +74,15 @@ Alternatively, install the APK from the releases section manually.
 
 ### iOS
 
-Recommended: install via [AltStore](https://altstore.io)  
+Recommended: install via [AltStore](https://altstore.io) or [SideStore](https://sidestore.io/)  
 
 [<img src="./assets/badges/badge_altstore.png"
-  alt="Get it on Obtainium"
+  alt="Get it on AltStore"
   height="80">][altstore-source]
+
+[<img src="./assets/badges/badge_sidestore.png"
+alt="Get it on SideStore"
+height="80">][sidestore-source]
 
 Or, add AltStore source manually:
 ```
@@ -114,3 +118,4 @@ Contributions are welcome. Make sure they are well tested and unit tests are ada
 
 [obtainium-app]: http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Sab44/omni_for_pyload
 [altstore-source]: https://sab44.github.io/
+[sidestore-source]: https://sab44.github.io/
