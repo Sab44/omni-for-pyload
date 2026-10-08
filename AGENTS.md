@@ -27,6 +27,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | `lib/features/<feature>/viewmodel/` | `ChangeNotifier` view models |
 | `lib/features/server/services/` | `ClickNLoadService` (local HTTP server + platform channel) |
 | `packages/openapi_client/` | **Generated** pyLoad REST client (`PyLoadRESTApi`). Do not edit by hand |
+| `android/` | Gradle 9.3.1, AGP 9.1.0, Kotlin 2.4.0, Java/JVM target 17 (matches the Flutter app template). Needs JDK 17+ |
 | `android/app/src/main/kotlin/.../` | `MainActivity` (method channel), `ClickNLoadForegroundService` |
 | `ios/` | Plugins integrated via Swift Package Manager only (no CocoaPods/Podfile). Min iOS 15.0. Both `swiftpm/Package.resolved` files are committed |
 | `ios/AltStoreSource.json` | AltStore/SideStore source; updated manually per release |
