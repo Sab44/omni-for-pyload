@@ -18,7 +18,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | Path | Contents |
 |---|---|
 | `lib/main.dart` | Entry: sets up DI, loads `AppSettings`, runs `App` |
-| `lib/core/` | `service_locator.dart` (get_it), `utils/` (`HttpClientFactory`, formatting) |
+| `lib/core/` | `service_locator.dart` (get_it), `logging.dart` (root logger setup), `utils/` (`HttpClientFactory`, formatting) |
 | `lib/domain/models/` | Plain Dart models: `Server`, `ClickNLoadServer`, `AppSettings` (manual `toJson`/`fromJson`/`copyWith`) |
 | `lib/domain/repositories/` | Repository interfaces (`I*Repository`) |
 | `lib/data/repositories/` | Implementations of the interfaces |
@@ -86,6 +86,7 @@ Only the selected tab polls. Polling pauses when the app is backgrounded or the 
 - Add new screens as `lib/features/<name>/{ui,viewmodel}/`. Keep logic in the view model; UI reads getters and calls methods.
 - New repositories: interface in `domain/repositories/`, implementation in `data/repositories/`, register in `service_locator.dart`.
 - View models take dependencies as constructor parameters (interfaces) so tests can pass mockito mocks. Assign private fields with private named initializing formals (`required this._serverRepository`, passed as `serverRepository:`; Dart 3.13+). Annotate tests with `@GenerateMocks([...])` and regenerate mocks after interface changes. Use `fake_async` for timer-based behavior.
+- Logging: no `print`. Use `package:logging` with one logger per class (`static final _log = Logger('ClassName');`). Pass caught errors and stack traces as arguments (`_log.warning('msg', e, stackTrace)`). Levels: `severe` failures, `warning` recoverable errors, `info` lifecycle events, `fine`/`finest` request details. Release builds output `WARNING`+ only (`setupLogging()` in `main.dart`).
 - Do not hand-edit or reformat `packages/openapi_client`; it is regenerated from pyLoad's OpenAPI spec.
 - Run `dart format lib test` before committing. Do not run `dart format .`, it would also reformat the generated client.
 

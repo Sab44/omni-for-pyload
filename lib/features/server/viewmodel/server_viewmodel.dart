@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:openapi_client/api.dart';
 import 'package:omni_for_pyload/data/repositories/click_n_load_repository.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
@@ -12,6 +13,8 @@ import 'package:omni_for_pyload/features/server/services/click_n_load_service.da
 enum ClickNLoadStartResult { started, alreadyRunning, failed, notConfigured }
 
 class ServerViewModel extends ChangeNotifier {
+  static final _log = Logger('ServerViewModel');
+
   final IPyLoadApiRepository _pyLoadApiRepository;
   final IServerRepository _serverRepository;
   Server _server;
@@ -400,8 +403,9 @@ class ServerViewModel extends ChangeNotifier {
     );
     final clickNLoadServer = _server.clickNLoadServer;
     if (clickNLoadServer != null) {
-      print(
-        'Initializing ClickNLoad service with remote url ${clickNLoadServer.baseUrl}',
+      _log.info(
+        'Initializing Click\'N\'Load service with remote url '
+        '${clickNLoadServer.baseUrl}',
       );
       _clickNLoadService = ClickNLoadService(
         repository: ClickNLoadRepository(clickNLoadServer),

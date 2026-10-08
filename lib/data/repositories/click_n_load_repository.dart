@@ -1,9 +1,12 @@
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:omni_for_pyload/core/utils/http_client_factory.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_click_n_load_repository.dart';
 
 class ClickNLoadRepository implements IClickNLoadRepository {
+  static final _log = Logger('ClickNLoadRepository');
+
   final http.Client _client;
   final ClickNLoadServer _server;
 
@@ -32,9 +35,9 @@ class ClickNLoadRepository implements IClickNLoadRepository {
     forwardedHeaders.remove('host');
     forwardedHeaders.remove('content-length');
 
-    print('Forwarding $method request to $uri');
+    _log.fine('Forwarding $method request to $uri');
     if (body != null) {
-      print('Body: $body');
+      _log.finest('Body: $body');
     }
 
     final request = http.Request(method, uri);
@@ -63,8 +66,8 @@ class ClickNLoadRepository implements IClickNLoadRepository {
       );
 
       return response;
-    } catch (e) {
-      print('Error forwarding request: $e');
+    } catch (e, stackTrace) {
+      _log.warning('Error forwarding request to $uri', e, stackTrace);
       // Return a 500 if forwarding fails
       return http.Response('Error forwarding request: $e', 500);
     }

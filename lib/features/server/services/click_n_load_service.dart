@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'package:omni_for_pyload/data/repositories/click_n_load_repository.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
 class ClickNLoadService {
+  static final _log = Logger('ClickNLoadService');
+
   static const MethodChannel _channel = MethodChannel(
     'com.downloader.omni_for_pyload/click_n_load',
   );
@@ -28,7 +31,7 @@ class ClickNLoadService {
         // Stop the HTTP server on the Dart side
         await _stopHttpServer();
         _isRunning = false;
-        print('ClickNLoadService: Received stop signal from native');
+        _log.info('Received stop signal from native service');
         return null;
       default:
         throw PlatformException(
@@ -51,8 +54,8 @@ class ClickNLoadService {
         await _stopHttpServer();
       }
       return running && _server != null;
-    } catch (e) {
-      print('ClickNLoadService: Error checking service status: $e');
+    } catch (e, stackTrace) {
+      _log.warning('Error checking service status', e, stackTrace);
       return false;
     }
   }
@@ -60,7 +63,7 @@ class ClickNLoadService {
   /// Start the Click'n'Load service with the given server configuration
   Future<bool> start() async {
     if (!Platform.isAndroid) {
-      print('ClickNLoadService: Not supported on this platform');
+      _log.warning('Click\'N\'Load is not supported on this platform');
       return false;
     }
 
@@ -72,10 +75,10 @@ class ClickNLoadService {
       await _startHttpServer();
 
       _isRunning = true;
-      print('ClickNLoadService: Service started successfully');
+      _log.info('Service started');
       return true;
-    } catch (e) {
-      print('ClickNLoadService: Error starting service: $e');
+    } catch (e, stackTrace) {
+      _log.severe('Error starting service', e, stackTrace);
       // Clean up on failure
       await stop();
       return false;
@@ -96,15 +99,15 @@ class ClickNLoadService {
       await _channel.invokeMethod('stopService');
 
       _isRunning = false;
-      print('ClickNLoadService: Service stopped');
-    } catch (e) {
-      print('ClickNLoadService: Error stopping service: $e');
+      _log.info('Service stopped');
+    } catch (e, stackTrace) {
+      _log.warning('Error stopping service', e, stackTrace);
     }
   }
 
   Future<void> _startHttpServer() async {
     if (_server != null) {
-      print('ClickNLoadService: HTTP server already running');
+      _log.fine('HTTP server already running');
       return;
     }
 
@@ -119,8 +122,8 @@ class ClickNLoadService {
           body: response.bodyBytes,
           headers: response.headers,
         );
-      } catch (e) {
-        print('ClickNLoadService: Error handling request: $e');
+      } catch (e, stackTrace) {
+        _log.warning('Error handling request', e, stackTrace);
         return Response.internalServerError(body: e.toString());
       }
     }
@@ -176,7 +179,12 @@ class ClickNLoadService {
     });
 
     final handler = Pipeline()
-        .addMiddleware(logRequests())
+        .addMiddleware(
+          logRequests(
+            logger: (message, isError) =>
+                isError ? _log.warning(message) : _log.fine(message),
+          ),
+        )
         .addHandler(app.call);
 
     try {
@@ -185,9 +193,9 @@ class ClickNLoadService {
         InternetAddress.loopbackIPv4,
         9666,
       );
-      print('ClickNLoadService: HTTP server running on port ${_server!.port}');
-    } catch (e) {
-      print('ClickNLoadService: Failed to start HTTP server: $e');
+      _log.info('HTTP server running on port ${_server!.port}');
+    } catch (e, stackTrace) {
+      _log.severe('Failed to start HTTP server', e, stackTrace);
       rethrow;
     }
   }
@@ -196,7 +204,7 @@ class ClickNLoadService {
     if (_server != null) {
       await _server!.close(force: true);
       _server = null;
-      print('ClickNLoadService: HTTP server stopped');
+      _log.info('HTTP server stopped');
     }
   }
 }
