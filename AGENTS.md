@@ -9,7 +9,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | Install deps | `flutter pub get` |
 | Run tests | `flutter test` |
 | Lint | `flutter analyze` (rules: `flutter_lints`; `packages/openapi_client/**` excluded) |
-| Format | `dart format lib test` |
+| Format | `dart format lib test` (never format `packages/openapi_client`) |
 | Regenerate mocks | `dart run build_runner build` |
 | Release builds | `flutter build apk --release` / `flutter build ios --release --no-codesign` |
 
@@ -26,7 +26,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | `lib/features/<feature>/ui/` | Screens and bottom sheets (StatefulWidgets) |
 | `lib/features/<feature>/viewmodel/` | `ChangeNotifier` view models |
 | `lib/features/server/services/` | `ClickNLoadService` (local HTTP server + platform channel) |
-| `packages/openapi_client/` | **Generated** pyLoad REST client (`PyLoadRESTApi`). Do not edit by hand |
+| `packages/openapi_client/` | **Generated** pyLoad REST client (`PyLoadRESTApi`). Do not edit or format by hand |
 | `android/` | Gradle 9.4.1, AGP 9.2.1, Kotlin 2.4.0, Java/JVM target 17. Needs JDK 17+. minSdk 24 / targetSdk 36 (Flutter defaults); compileSdk 37 (required by `permission_handler_android`, `flutter_secure_storage`) |
 | `android/app/src/main/kotlin/.../` | `MainActivity` (method channel), `ClickNLoadForegroundService` |
 | `ios/` | Plugins integrated via Swift Package Manager only (no CocoaPods/Podfile). Min iOS 15.0. All plugins are local packages, so Xcode creates no `Package.resolved` |
@@ -85,9 +85,9 @@ Only the selected tab polls. Polling pauses when the app is backgrounded or the 
 
 - Add new screens as `lib/features/<name>/{ui,viewmodel}/`. Keep logic in the view model; UI reads getters and calls methods.
 - New repositories: interface in `domain/repositories/`, implementation in `data/repositories/`, register in `service_locator.dart`.
-- View models take dependencies as constructor parameters (interfaces) so tests can pass mockito mocks. Annotate tests with `@GenerateMocks([...])` and regenerate mocks after interface changes. Use `fake_async` for timer-based behavior.
-- Do not hand-edit `packages/openapi_client`; it is regenerated from pyLoad's OpenAPI spec.
-- Run `dart format` before committing.
+- View models take dependencies as constructor parameters (interfaces) so tests can pass mockito mocks. Assign private fields with private named initializing formals (`required this._serverRepository`, passed as `serverRepository:`; Dart 3.13+). Annotate tests with `@GenerateMocks([...])` and regenerate mocks after interface changes. Use `fake_async` for timer-based behavior.
+- Do not hand-edit or reformat `packages/openapi_client`; it is regenerated from pyLoad's OpenAPI spec.
+- Run `dart format lib test` before committing. Do not run `dart format .`, it would also reformat the generated client.
 
 ## CI / Release
 

@@ -7,10 +7,9 @@ class AddServerViewModel {
   final IPyLoadApiRepository _pyLoadApiRepository;
 
   AddServerViewModel({
-    required IServerRepository serverRepository,
-    required IPyLoadApiRepository pyLoadApiRepository,
-  }) : _serverRepository = serverRepository,
-       _pyLoadApiRepository = pyLoadApiRepository;
+    required this._serverRepository,
+    required this._pyLoadApiRepository,
+  });
 
   /// Validate and add a server
   /// Returns the server if successful, or throws an exception with error message

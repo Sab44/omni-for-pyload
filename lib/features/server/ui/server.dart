@@ -100,9 +100,8 @@ class _ServerScreenState extends State<ServerScreen>
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _showClickNLoadAlreadyRunningDialog() {
@@ -286,16 +285,13 @@ class _ServerScreenState extends State<ServerScreen>
         children: [
           Text(
             widget.server.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           Text(
             '${widget.server.protocol}://${widget.server.ip}:${widget.server.port}',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontSize: 12),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(fontSize: 12),
           ),
         ],
       ),
@@ -602,14 +598,13 @@ class _ServerScreenState extends State<ServerScreen>
   /// Navigate to settings screen, pass current server
   Future<void> _navigateToSettings() async {
     await Navigator.pushNamed(
-          context,
-          '/settings',
-          arguments: {
-            'server': _viewModel.server,
-            'onStopClickNLoad': _viewModel.stopClickNLoad,
-          },
-        )
-        as Server?;
+      context,
+      '/settings',
+      arguments: {
+        'server': _viewModel.server,
+        'onStopClickNLoad': _viewModel.stopClickNLoad,
+      },
+    ) as Server?;
   }
 
   void _showAddClickNLoadBottomSheet() {

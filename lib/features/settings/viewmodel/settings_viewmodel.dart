@@ -13,14 +13,11 @@ class SettingsViewModel extends ChangeNotifier {
   final Server? _server;
 
   SettingsViewModel({
-    required ISettingsRepository settingsRepository,
-    IServerRepository? serverRepository,
-    Server? server,
-    Future<void> Function()? onClickNLoadConfigChanged,
-  }) : _settingsRepository = settingsRepository,
-       _serverRepository = serverRepository,
-       _server = server,
-       _onClickNLoadConfigChanged = onClickNLoadConfigChanged {
+    required this._settingsRepository,
+    this._serverRepository,
+    this._server,
+    this._onClickNLoadConfigChanged,
+  }) {
     _loadSettings();
   }
 

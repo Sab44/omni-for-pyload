@@ -103,9 +103,8 @@ class _AddLinksBottomSheetState extends State<AddLinksBottomSheet> {
                 // Title
                 Text(
                   'Add links',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),

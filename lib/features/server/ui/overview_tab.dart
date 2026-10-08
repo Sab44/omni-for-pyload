@@ -116,9 +116,8 @@ class OverviewTab extends StatelessWidget {
                           '${(formatBytes(download.speed))}/s',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        backgroundColor: Theme.of(
-                          context,
-                        ).scaffoldBackgroundColor,
+                        backgroundColor: Theme.of(context)
+                            .scaffoldBackgroundColor,
                         shape: const StadiumBorder(
                           side: BorderSide(style: BorderStyle.none),
                         ),

@@ -16,10 +16,9 @@ class ServerOverviewViewModel extends ChangeNotifier {
   final _serverStatusPollingInterval = Duration(seconds: 2);
 
   ServerOverviewViewModel({
-    required IServerRepository serverRepository,
-    required IPyLoadApiRepository pyLoadApiRepository,
-  }) : _serverRepository = serverRepository,
-       _pyLoadApiRepository = pyLoadApiRepository;
+    required this._serverRepository,
+    required this._pyLoadApiRepository,
+  });
 
   List<Server> get servers => _servers;
   Map<String, String> get statuses => _statuses;

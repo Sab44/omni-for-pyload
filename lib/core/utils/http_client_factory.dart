@@ -7,8 +7,11 @@ class HttpClientFactory {
   static IOClient createClient(bool allowInsecureConnections) {
     if (allowInsecureConnections) {
       final HttpClient httpClient = HttpClient()
-        ..badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
+        ..badCertificateCallback = (
+          X509Certificate cert,
+          String host,
+          int port,
+        ) => true;
       return IOClient(httpClient);
     }
 

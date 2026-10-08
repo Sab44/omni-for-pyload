@@ -29,12 +29,10 @@ class ServerViewModel extends ChangeNotifier {
   bool _isPaused = false;
 
   ServerViewModel({
-    required Server server,
-    required IPyLoadApiRepository pyLoadApiRepository,
-    required IServerRepository serverRepository,
-  }) : _server = server,
-       _pyLoadApiRepository = pyLoadApiRepository,
-       _serverRepository = serverRepository {
+    required this._server,
+    required this._pyLoadApiRepository,
+    required this._serverRepository,
+  }) {
     _startPollingServerStatus();
   }
 

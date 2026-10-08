@@ -72,10 +72,8 @@ class _DownloadDetailScreenState extends State<DownloadDetailScreen> {
       appBar: AppBar(
         title: Text(
           _viewModel.packageData?.name ?? 'Loading...',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

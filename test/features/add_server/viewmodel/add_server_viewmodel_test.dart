@@ -110,9 +110,8 @@ void main() {
     test(
       'validateAndAddServer throws error when server already exists',
       () async {
-        when(
-          mockServerRepository.serverExists('192.168.1.1', 8000),
-        ).thenAnswer((_) async => true);
+        when(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .thenAnswer((_) async => true);
 
         expect(
           () => viewModel.validateAndAddServer(
@@ -132,18 +131,16 @@ void main() {
           ),
         );
 
-        verify(
-          mockServerRepository.serverExists('192.168.1.1', 8000),
-        ).called(1);
+        verify(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .called(1);
       },
     );
 
     test(
       'validateAndAddServer calls getServerStatus and addServer on success',
       () async {
-        when(
-          mockServerRepository.serverExists('192.168.1.1', 8000),
-        ).thenAnswer((_) async => false);
+        when(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .thenAnswer((_) async => false);
 
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) async => ServerStatus(
@@ -175,18 +172,16 @@ void main() {
         expect(server.allowInsecure, true);
         expect(server.name, 'Test Server');
 
-        verify(
-          mockServerRepository.serverExists('192.168.1.1', 8000),
-        ).called(1);
+        verify(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .called(1);
         verify(mockPyLoadApiRepository.getServerStatus(any)).called(1);
         verify(mockServerRepository.addServer(any)).called(1);
       },
     );
 
     test('validateAndAddServer defaults name to pyLoad when empty', () async {
-      when(
-        mockServerRepository.serverExists('192.168.1.1', 8000),
-      ).thenAnswer((_) async => false);
+      when(mockServerRepository.serverExists('192.168.1.1', 8000))
+          .thenAnswer((_) async => false);
 
       when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
         (_) async => ServerStatus(
@@ -221,9 +216,8 @@ void main() {
     test(
       'validateAndAddServer defaults name to pyLoad when only whitespace',
       () async {
-        when(
-          mockServerRepository.serverExists('192.168.1.1', 8000),
-        ).thenAnswer((_) async => false);
+        when(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .thenAnswer((_) async => false);
 
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) async => ServerStatus(
@@ -252,16 +246,14 @@ void main() {
         expect(server.ip, '192.168.1.1');
         expect(server.port, 8000);
 
-        verify(
-          mockServerRepository.serverExists('192.168.1.1', 8000),
-        ).called(1);
+        verify(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .called(1);
       },
     );
 
     test('validateAndAddServer trims server name', () async {
-      when(
-        mockServerRepository.serverExists('192.168.1.1', 8000),
-      ).thenAnswer((_) async => false);
+      when(mockServerRepository.serverExists('192.168.1.1', 8000))
+          .thenAnswer((_) async => false);
 
       when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
         (_) async => ServerStatus(
@@ -292,9 +284,8 @@ void main() {
     test(
       'validateAndAddServer verifies server connection before adding',
       () async {
-        when(
-          mockServerRepository.serverExists('192.168.1.1', 8000),
-        ).thenAnswer((_) async => false);
+        when(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .thenAnswer((_) async => false);
 
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) async => ServerStatus(

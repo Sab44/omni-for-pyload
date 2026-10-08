@@ -54,9 +54,8 @@ void main() {
         ),
       ];
 
-      when(
-        mockServerRepository.getAllServers(),
-      ).thenAnswer((_) async => testServers);
+      when(mockServerRepository.getAllServers())
+          .thenAnswer((_) async => testServers);
 
       await viewModel.loadServers();
 
@@ -76,13 +75,11 @@ void main() {
 
     test('removeServer removes server from list and repository', () async {
       final initialServers = [server];
-      when(
-        mockServerRepository.getAllServers(),
-      ).thenAnswer((_) async => initialServers);
+      when(mockServerRepository.getAllServers())
+          .thenAnswer((_) async => initialServers);
 
-      when(
-        mockServerRepository.removeServer('192.168.1.1', 8000),
-      ).thenAnswer((_) async => Future<void>.value());
+      when(mockServerRepository.removeServer('192.168.1.1', 8000))
+          .thenAnswer((_) async => Future<void>.value());
 
       // Load servers first
       await viewModel.loadServers();
@@ -97,9 +94,8 @@ void main() {
 
     test('polling updates status to online on success', () {
       fakeAsync((async) {
-        when(
-          mockServerRepository.getAllServers(),
-        ).thenAnswer((_) async => [server]);
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server]);
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) => Future.value(
             ServerStatus(
@@ -132,9 +128,8 @@ void main() {
 
     test('polling updates status to offline on error', () {
       fakeAsync((async) {
-        when(
-          mockServerRepository.getAllServers(),
-        ).thenAnswer((_) async => [server]);
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server]);
         when(mockPyLoadApiRepository.getServerStatus(any)).thenThrow('Error');
 
         viewModel.loadServers();
@@ -152,17 +147,15 @@ void main() {
 
     test('polling updates status to offline on timeout', () {
       fakeAsync((async) {
-        when(
-          mockServerRepository.getAllServers(),
-        ).thenAnswer((_) async => [server]);
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server]);
 
         // Simulate timeout by returning a future that completes after 2 seconds
-        when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer((
-          _,
-        ) async {
-          await Future.delayed(const Duration(seconds: 2));
-          throw TimeoutException('Connection timeout');
-        });
+        when(mockPyLoadApiRepository.getServerStatus(any))
+            .thenAnswer((_) async {
+              await Future.delayed(const Duration(seconds: 2));
+              throw TimeoutException('Connection timeout');
+            });
 
         viewModel.loadServers();
         async.flushMicrotasks();
@@ -183,9 +176,8 @@ void main() {
     test('loadServers triggers notifyListeners', () async {
       final testServers = [server];
 
-      when(
-        mockServerRepository.getAllServers(),
-      ).thenAnswer((_) async => testServers);
+      when(mockServerRepository.getAllServers())
+          .thenAnswer((_) async => testServers);
 
       // Create a spy to track notifyListeners calls
       int listenerCount = 0;
@@ -201,12 +193,10 @@ void main() {
     });
 
     test('removeServer triggers notifyListeners', () async {
-      when(
-        mockServerRepository.getAllServers(),
-      ).thenAnswer((_) async => [server]);
-      when(
-        mockServerRepository.removeServer(any, any),
-      ).thenAnswer((_) async => Future.value());
+      when(mockServerRepository.getAllServers())
+          .thenAnswer((_) async => [server]);
+      when(mockServerRepository.removeServer(any, any))
+          .thenAnswer((_) async => Future.value());
 
       await viewModel.loadServers();
 

@@ -87,10 +87,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-      ),
+      style: Theme.of(context).textTheme.titleLarge
+          ?.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
     );
   }
 
@@ -103,9 +101,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Text(
               'Theme',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 12),
             SegmentedButton<app_models.ThemeMode>(

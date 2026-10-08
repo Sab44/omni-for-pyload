@@ -67,22 +67,18 @@ void main() {
 
     test('setSelectedTab updates index and starts polling', () async {
       // Setup mocks for polling calls
-      when(
-        mockPyLoadApiRepository.getDownloadStatus(server),
-      ).thenAnswer((_) async => []);
-      when(
-        mockPyLoadApiRepository.getQueue(server),
-      ).thenAnswer((_) async => []);
-      when(
-        mockPyLoadApiRepository.getCollector(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getDownloadStatus(server))
+          .thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getQueue(server))
+          .thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getCollector(server))
+          .thenAnswer((_) async => []);
 
       // Tab 0 (Overview) - already selected by default, but let's verify behavior
       viewModel.setSelectedTab(0);
       expect(viewModel.selectedTabIndex, 0);
-      verify(
-        mockPyLoadApiRepository.getDownloadStatus(server),
-      ).called(greaterThan(0));
+      verify(mockPyLoadApiRepository.getDownloadStatus(server))
+          .called(greaterThan(0));
 
       // Tab 1 (Queue)
       viewModel.setSelectedTab(1);
@@ -115,41 +111,32 @@ void main() {
       expect(viewModel.isSelectionMode, false);
     });
 
-    test(
-      'deleteSelectedPackages calls repository and clears selection',
-      () async {
-        viewModel.toggleSelection(1);
-        viewModel.toggleSelection(2);
+    test('deleteSelectedPackages calls repository and clears selection', () async {
+      viewModel.toggleSelection(1);
+      viewModel.toggleSelection(2);
 
-        when(
-          mockPyLoadApiRepository.deletePackages(server, [1, 2]),
-        ).thenAnswer((_) async => {});
-        // Mock getDownloadStatus because setSelectedTab(0) is called after delete
-        when(
-          mockPyLoadApiRepository.getDownloadStatus(server),
-        ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.deletePackages(server, [1, 2]))
+          .thenAnswer((_) async => {});
+      // Mock getDownloadStatus because setSelectedTab(0) is called after delete
+      when(mockPyLoadApiRepository.getDownloadStatus(server))
+          .thenAnswer((_) async => []);
 
-        final result = await viewModel.deleteSelectedPackages();
+      final result = await viewModel.deleteSelectedPackages();
 
-        expect(result, true);
-        verify(
-          mockPyLoadApiRepository.deletePackages(server, [1, 2]),
-        ).called(1);
-        expect(viewModel.selectedPackageIds, isEmpty);
-      },
-    );
+      expect(result, true);
+      verify(mockPyLoadApiRepository.deletePackages(server, [1, 2])).called(1);
+      expect(viewModel.selectedPackageIds, isEmpty);
+    });
 
     test(
       'restartSelectedPackages calls repository and clears selection',
       () async {
         viewModel.toggleSelection(1);
 
-        when(
-          mockPyLoadApiRepository.restartPackages(server, [1]),
-        ).thenAnswer((_) async => Result.success);
-        when(
-          mockPyLoadApiRepository.getDownloadStatus(server),
-        ).thenAnswer((_) async => []);
+        when(mockPyLoadApiRepository.restartPackages(server, [1]))
+            .thenAnswer((_) async => Result.success);
+        when(mockPyLoadApiRepository.getDownloadStatus(server))
+            .thenAnswer((_) async => []);
 
         final result = await viewModel.restartSelectedPackages();
 
@@ -166,9 +153,8 @@ void main() {
         viewModel.setSelectedTab(2); // Collector tab
         viewModel.toggleSelection(1);
 
-        when(
-          mockPyLoadApiRepository.getCollector(server),
-        ).thenAnswer((_) async => []);
+        when(mockPyLoadApiRepository.getCollector(server))
+            .thenAnswer((_) async => []);
         when(
           mockPyLoadApiRepository.movePackages(server, [1], Destination.QUEUE),
         ).thenAnswer((_) async => Result.success);
@@ -186,12 +172,10 @@ void main() {
     test('extractSelectedPackages calls repository', () async {
       viewModel.toggleSelection(1);
 
-      when(
-        mockPyLoadApiRepository.extractPackages(server, [1]),
-      ).thenAnswer((_) async => Result.success);
-      when(
-        mockPyLoadApiRepository.getDownloadStatus(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.extractPackages(server, [1]))
+          .thenAnswer((_) async => Result.success);
+      when(mockPyLoadApiRepository.getDownloadStatus(server))
+          .thenAnswer((_) async => []);
 
       final result = await viewModel.extractSelectedPackages();
 
@@ -225,9 +209,8 @@ void main() {
       // Allow the constructor's async fetch to complete
       await Future.delayed(Duration.zero);
 
-      when(
-        mockPyLoadApiRepository.unpauseServer(server),
-      ).thenAnswer((_) async => true);
+      when(mockPyLoadApiRepository.unpauseServer(server))
+          .thenAnswer((_) async => true);
 
       final result = await pausedViewModel.resumeQueue();
 
@@ -242,9 +225,8 @@ void main() {
       // Wait for initial fetch to populate _serverStatus (pause: false)
       await Future.delayed(Duration.zero);
 
-      when(
-        mockPyLoadApiRepository.pauseServer(server),
-      ).thenAnswer((_) async => true);
+      when(mockPyLoadApiRepository.pauseServer(server))
+          .thenAnswer((_) async => true);
       // It also calls _fetchServerStatus again
       when(mockPyLoadApiRepository.getServerStatus(server)).thenAnswer(
         (_) async => ServerStatus(
@@ -267,9 +249,8 @@ void main() {
     });
 
     test('stopQueue calls stopAllDownloads', () async {
-      when(
-        mockPyLoadApiRepository.stopAllDownloads(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.stopAllDownloads(server))
+          .thenAnswer((_) async => []);
 
       final result = await viewModel.stopQueue();
 
@@ -278,12 +259,10 @@ void main() {
     });
 
     test('clearFinished calls deleteFinished', () async {
-      when(
-        mockPyLoadApiRepository.deleteFinished(server),
-      ).thenAnswer((_) async => []);
-      when(
-        mockPyLoadApiRepository.getDownloadStatus(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.deleteFinished(server))
+          .thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getDownloadStatus(server))
+          .thenAnswer((_) async => []);
 
       final result = await viewModel.clearFinished();
 
@@ -292,12 +271,10 @@ void main() {
     });
 
     test('restartFailed calls restartFailed', () async {
-      when(
-        mockPyLoadApiRepository.restartFailed(server),
-      ).thenAnswer((_) async => []);
-      when(
-        mockPyLoadApiRepository.getDownloadStatus(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.restartFailed(server))
+          .thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getDownloadStatus(server))
+          .thenAnswer((_) async => []);
 
       final result = await viewModel.restartFailed();
 
@@ -318,9 +295,8 @@ void main() {
 
       // If tab is 2 (Collector), it refreshes
       viewModel.setSelectedTab(2);
-      when(
-        mockPyLoadApiRepository.getCollector(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getCollector(server))
+          .thenAnswer((_) async => []);
 
       final result = await viewModel.uploadDlc(
         'test.dlc',
@@ -354,9 +330,8 @@ void main() {
 
       // If destination is Queue and tab is Queue, it refreshes
       viewModel.setSelectedTab(1);
-      when(
-        mockPyLoadApiRepository.getQueue(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getQueue(server))
+          .thenAnswer((_) async => []);
 
       final result = await viewModel.addPackageWithLinks(
         'test package',
@@ -392,9 +367,8 @@ void main() {
 
       // If destination is Queue and tab is Queue, it refreshes
       viewModel.setSelectedTab(1);
-      when(
-        mockPyLoadApiRepository.getQueue(server),
-      ).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getQueue(server))
+          .thenAnswer((_) async => []);
 
       final result = await viewModel.addPackageWithLinks(
         'test package',
@@ -412,9 +386,8 @@ void main() {
           Destination.QUEUE,
         ),
       ).called(1);
-      verify(
-        mockPyLoadApiRepository.setPackagePassword(server, 123, 's3cret'),
-      ).called(1);
+      verify(mockPyLoadApiRepository.setPackagePassword(server, 123, 's3cret'))
+          .called(1);
       // Verify refresh happened (called twice: once for tab select, once for addPackage refresh)
       verify(mockPyLoadApiRepository.getQueue(server)).called(2);
     });

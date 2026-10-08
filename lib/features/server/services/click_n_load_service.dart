@@ -13,8 +13,7 @@ class ClickNLoadService {
 
   final ClickNLoadRepository _repository;
 
-  ClickNLoadService({required ClickNLoadRepository repository})
-    : _repository = repository {
+  ClickNLoadService({required this._repository}) {
     // Set up handler for callbacks from native side
     _channel.setMethodCallHandler(_handleMethodCall);
   }

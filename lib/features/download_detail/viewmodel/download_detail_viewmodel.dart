@@ -15,8 +15,8 @@ class DownloadDetailViewModel extends ChangeNotifier {
   DownloadDetailViewModel({
     required this.server,
     required this.packageId,
-    required IPyLoadApiRepository pyLoadApiRepository,
-  }) : _pyLoadApiRepository = pyLoadApiRepository {
+    required this._pyLoadApiRepository,
+  }) {
     _fetchPackageData();
   }
 

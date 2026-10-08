@@ -209,8 +209,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
                   obscureText: true,
                   decoration: const InputDecoration(
                     labelText: 'API Key',
-                    helperText:
-                        'Generate the API Key in your pyLoad instance\'s settings page.',
+                    helperText: 'Generate the API Key in your pyLoad instance\'s settings page.',
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -242,9 +241,9 @@ class _AddServerScreenState extends State<AddServerScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimary,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary,
                                   ),
                                 ),
                               ],

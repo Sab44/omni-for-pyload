@@ -61,9 +61,8 @@ class _UploadDlcBottomSheetState extends State<UploadDlcBottomSheet> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error picking file: $e')));
       }
     }
   }
@@ -104,9 +103,8 @@ class _UploadDlcBottomSheetState extends State<UploadDlcBottomSheet> {
             // Title
             Text(
               'Upload DLC',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -159,9 +157,8 @@ class _UploadDlcBottomSheetState extends State<UploadDlcBottomSheet> {
             else
               Text(
                 'No file selected',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
             const SizedBox(height: 24),

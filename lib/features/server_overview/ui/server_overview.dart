@@ -158,10 +158,8 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                 children: [
                   Text(
                     'Omni for pyLoad',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   FloatingActionButton(
                     mini: true,
@@ -181,10 +179,8 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Servers',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

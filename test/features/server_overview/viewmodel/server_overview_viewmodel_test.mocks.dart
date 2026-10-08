@@ -49,56 +49,44 @@ class MockIServerRepository extends _i1.Mock implements _i3.IServerRepository {
   }
 
   @override
-  _i4.Future<List<_i5.Server>> getAllServers() =>
-      (super.noSuchMethod(
-            Invocation.method(#getAllServers, []),
-            returnValue: _i4.Future<List<_i5.Server>>.value(<_i5.Server>[]),
-          )
-          as _i4.Future<List<_i5.Server>>);
+  _i4.Future<List<_i5.Server>> getAllServers() => (super.noSuchMethod(
+    Invocation.method(#getAllServers, []),
+    returnValue: _i4.Future<List<_i5.Server>>.value(<_i5.Server>[]),
+  ) as _i4.Future<List<_i5.Server>>);
 
   @override
-  _i4.Future<void> addServer(_i5.Server? server) =>
-      (super.noSuchMethod(
-            Invocation.method(#addServer, [server]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> addServer(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#addServer, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
-  _i4.Future<bool> serverExists(String? ip, int? port) =>
-      (super.noSuchMethod(
-            Invocation.method(#serverExists, [ip, port]),
-            returnValue: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
+  _i4.Future<bool> serverExists(String? ip, int? port) => (super.noSuchMethod(
+    Invocation.method(#serverExists, [ip, port]),
+    returnValue: _i4.Future<bool>.value(false),
+  ) as _i4.Future<bool>);
 
   @override
-  _i4.Future<void> removeServer(String? ip, int? port) =>
-      (super.noSuchMethod(
-            Invocation.method(#removeServer, [ip, port]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> removeServer(String? ip, int? port) => (super.noSuchMethod(
+    Invocation.method(#removeServer, [ip, port]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> updateServer(_i5.Server? server) =>
-      (super.noSuchMethod(
-            Invocation.method(#updateServer, [server]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> updateServer(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#updateServer, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> clearAllServers() =>
-      (super.noSuchMethod(
-            Invocation.method(#clearAllServers, []),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> clearAllServers() => (super.noSuchMethod(
+    Invocation.method(#clearAllServers, []),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 }
 
 /// A class which mocks [IPyLoadApiRepository].
@@ -113,169 +101,144 @@ class MockIPyLoadApiRepository extends _i1.Mock
   @override
   _i4.Future<_i2.ServerStatus> getServerStatus(_i5.Server? server) =>
       (super.noSuchMethod(
+        Invocation.method(#getServerStatus, [server]),
+        returnValue: _i4.Future<_i2.ServerStatus>.value(
+          _FakeServerStatus_0(
+            this,
             Invocation.method(#getServerStatus, [server]),
-            returnValue: _i4.Future<_i2.ServerStatus>.value(
-              _FakeServerStatus_0(
-                this,
-                Invocation.method(#getServerStatus, [server]),
-              ),
-            ),
-          )
-          as _i4.Future<_i2.ServerStatus>);
+          ),
+        ),
+      ) as _i4.Future<_i2.ServerStatus>);
 
   @override
   _i4.Future<List<_i2.DownloadInfo>> getDownloadStatus(_i5.Server? server) =>
       (super.noSuchMethod(
-            Invocation.method(#getDownloadStatus, [server]),
-            returnValue: _i4.Future<List<_i2.DownloadInfo>>.value(
-              <_i2.DownloadInfo>[],
-            ),
-          )
-          as _i4.Future<List<_i2.DownloadInfo>>);
+        Invocation.method(#getDownloadStatus, [server]),
+        returnValue: _i4.Future<List<_i2.DownloadInfo>>.value(
+          <_i2.DownloadInfo>[],
+        ),
+      ) as _i4.Future<List<_i2.DownloadInfo>>);
 
   @override
   _i4.Future<List<_i2.PackageData>> getQueueData(_i5.Server? server) =>
       (super.noSuchMethod(
-            Invocation.method(#getQueueData, [server]),
-            returnValue: _i4.Future<List<_i2.PackageData>>.value(
-              <_i2.PackageData>[],
-            ),
-          )
-          as _i4.Future<List<_i2.PackageData>>);
+        Invocation.method(#getQueueData, [server]),
+        returnValue: _i4.Future<List<_i2.PackageData>>.value(
+          <_i2.PackageData>[],
+        ),
+      ) as _i4.Future<List<_i2.PackageData>>);
 
   @override
   _i4.Future<List<_i2.PackageData>> getCollectorData(_i5.Server? server) =>
       (super.noSuchMethod(
-            Invocation.method(#getCollectorData, [server]),
-            returnValue: _i4.Future<List<_i2.PackageData>>.value(
-              <_i2.PackageData>[],
-            ),
-          )
-          as _i4.Future<List<_i2.PackageData>>);
+        Invocation.method(#getCollectorData, [server]),
+        returnValue: _i4.Future<List<_i2.PackageData>>.value(
+          <_i2.PackageData>[],
+        ),
+      ) as _i4.Future<List<_i2.PackageData>>);
 
   @override
   _i4.Future<List<_i2.PackageData>> getQueue(_i5.Server? server) =>
       (super.noSuchMethod(
-            Invocation.method(#getQueue, [server]),
-            returnValue: _i4.Future<List<_i2.PackageData>>.value(
-              <_i2.PackageData>[],
-            ),
-          )
-          as _i4.Future<List<_i2.PackageData>>);
+        Invocation.method(#getQueue, [server]),
+        returnValue: _i4.Future<List<_i2.PackageData>>.value(
+          <_i2.PackageData>[],
+        ),
+      ) as _i4.Future<List<_i2.PackageData>>);
 
   @override
   _i4.Future<List<_i2.PackageData>> getCollector(_i5.Server? server) =>
       (super.noSuchMethod(
-            Invocation.method(#getCollector, [server]),
-            returnValue: _i4.Future<List<_i2.PackageData>>.value(
-              <_i2.PackageData>[],
-            ),
-          )
-          as _i4.Future<List<_i2.PackageData>>);
+        Invocation.method(#getCollector, [server]),
+        returnValue: _i4.Future<List<_i2.PackageData>>.value(
+          <_i2.PackageData>[],
+        ),
+      ) as _i4.Future<List<_i2.PackageData>>);
 
   @override
   _i4.Future<_i2.PackageData> getPackageData(
     _i5.Server? server,
     int? packageId,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#getPackageData, [server, packageId]),
-            returnValue: _i4.Future<_i2.PackageData>.value(
-              _FakePackageData_1(
-                this,
-                Invocation.method(#getPackageData, [server, packageId]),
-              ),
-            ),
-          )
-          as _i4.Future<_i2.PackageData>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#getPackageData, [server, packageId]),
+    returnValue: _i4.Future<_i2.PackageData>.value(
+      _FakePackageData_1(
+        this,
+        Invocation.method(#getPackageData, [server, packageId]),
+      ),
+    ),
+  ) as _i4.Future<_i2.PackageData>);
 
   @override
   _i4.Future<void> deletePackages(_i5.Server? server, List<int>? packageIds) =>
       (super.noSuchMethod(
-            Invocation.method(#deletePackages, [server, packageIds]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+        Invocation.method(#deletePackages, [server, packageIds]),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
   _i4.Future<_i6.Result> restartPackages(
     _i5.Server? server,
     List<int>? packageIds,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#restartPackages, [server, packageIds]),
-            returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
-          )
-          as _i4.Future<_i6.Result>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#restartPackages, [server, packageIds]),
+    returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
+  ) as _i4.Future<_i6.Result>);
 
   @override
   _i4.Future<_i6.Result> movePackages(
     _i5.Server? server,
     List<int>? packageIds,
     _i2.Destination? destination,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#movePackages, [server, packageIds, destination]),
-            returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
-          )
-          as _i4.Future<_i6.Result>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#movePackages, [server, packageIds, destination]),
+    returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
+  ) as _i4.Future<_i6.Result>);
 
   @override
   _i4.Future<_i6.Result> extractPackages(
     _i5.Server? server,
     List<int>? packageIds,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#extractPackages, [server, packageIds]),
-            returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
-          )
-          as _i4.Future<_i6.Result>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#extractPackages, [server, packageIds]),
+    returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
+  ) as _i4.Future<_i6.Result>);
 
   @override
-  _i4.Future<void> pauseServer(_i5.Server? server) =>
-      (super.noSuchMethod(
-            Invocation.method(#pauseServer, [server]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> pauseServer(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#pauseServer, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> unpauseServer(_i5.Server? server) =>
-      (super.noSuchMethod(
-            Invocation.method(#unpauseServer, [server]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> unpauseServer(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#unpauseServer, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> stopAllDownloads(_i5.Server? server) =>
-      (super.noSuchMethod(
-            Invocation.method(#stopAllDownloads, [server]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> stopAllDownloads(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#stopAllDownloads, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> deleteFinished(_i5.Server? server) =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteFinished, [server]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> deleteFinished(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#deleteFinished, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> restartFailed(_i5.Server? server) =>
-      (super.noSuchMethod(
-            Invocation.method(#restartFailed, [server]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  _i4.Future<void> restartFailed(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#restartFailed, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
   _i4.Future<void> uploadContainer(
@@ -283,18 +246,16 @@ class MockIPyLoadApiRepository extends _i1.Mock
     String? fileName,
     List<int>? fileBytes,
     _i2.Destination? destination,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#uploadContainer, [
-              server,
-              fileName,
-              fileBytes,
-              destination,
-            ]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#uploadContainer, [
+      server,
+      fileName,
+      fileBytes,
+      destination,
+    ]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
   _i4.Future<int> addPackage(
@@ -302,27 +263,19 @@ class MockIPyLoadApiRepository extends _i1.Mock
     String? name,
     List<String>? links,
     _i2.Destination? destination,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#addPackage, [server, name, links, destination]),
-            returnValue: _i4.Future<int>.value(0),
-          )
-          as _i4.Future<int>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#addPackage, [server, name, links, destination]),
+    returnValue: _i4.Future<int>.value(0),
+  ) as _i4.Future<int>);
 
   @override
   _i4.Future<void> setPackagePassword(
     _i5.Server? server,
     int? packageId,
     String? password,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#setPackagePassword, [
-              server,
-              packageId,
-              password,
-            ]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
+  ) => (super.noSuchMethod(
+    Invocation.method(#setPackagePassword, [server, packageId, password]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 }
