@@ -27,7 +27,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | `lib/features/<feature>/viewmodel/` | `ChangeNotifier` view models |
 | `lib/features/server/services/` | `ClickNLoadService` (local HTTP server + platform channel) |
 | `packages/openapi_client/` | **Generated** pyLoad REST client (`PyLoadRESTApi`). Do not edit or format by hand |
-| `android/` | Gradle 9.4.1, AGP 9.2.1, Kotlin 2.4.0, Java/JVM target 17. Needs JDK 17+. minSdk 24 / targetSdk 36 (Flutter defaults); compileSdk 37 (required by `permission_handler_android`, `flutter_secure_storage`) |
+| `android/` | Gradle 9.4.1, AGP 9.2.1, Kotlin 2.4.0, Java/JVM target 17. Needs JDK 17+. minSdk 24 / targetSdk 36 (Flutter defaults); compileSdk 37 (required by `permission_handler_android`, `flutter_secure_storage`). Built-in Kotlin enabled (AGP default); plugins must support it, otherwise they apply KGP and the build warns |
 | `android/app/src/main/kotlin/.../` | `MainActivity` (method channel), `ClickNLoadForegroundService` |
 | `ios/` | Plugins integrated via Swift Package Manager only (no CocoaPods/Podfile). Min iOS 15.0. All plugins are local packages, so Xcode creates no `Package.resolved` |
 | `ios/AltStoreSource.json` | AltStore/SideStore source; new versions are added by the release workflow |
@@ -37,7 +37,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 
 - Layering: `UI → ViewModel → I*Repository (domain) → Repository (data) → openapi_client / storage`.
 - Pattern: MVVM. Each screen creates its view model in `initState`, injecting repositories via `getIt<I...>()`, and calls `setState` from an `addListener` callback. No Provider/Bloc/Riverpod.
-- DI (`core/service_locator.dart`): singletons for `IServerRepository`, `IPyLoadApiRepository`, `ISettingsRepository`. `ClickNLoadRepository` is not registered; it is constructed per `ClickNLoadServer`.
+- DI (`core/service_locator.dart`): singletons for `IServerRepository`, `IPyLoadApiRepository`, `ISettingsRepository`, `IAppInfoRepository` (app version via `package_info_plus`). `ClickNLoadRepository` is not registered; it is constructed per `ClickNLoadServer`.
 - Navigation: named routes in `app.dart`. `/server`, `/settings`, `/download-detail` take arguments via `onGenerateRoute` (`Server`, or a `Map<String, dynamic>`).
 
 ### Features
@@ -48,7 +48,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | `add_server` | Add server form; validates connection via API before saving |
 | `server` | Main per-server screen: tabs Overview (active downloads) / Queue / Collector, multi-select actions, add links, upload DLC, Click'N'Load control |
 | `download_detail` | Package details incl. files, package password |
-| `settings` | Theme, start-screen behavior, per-server Click'N'Load config |
+| `settings` | Theme, start-screen behavior, per-server Click'N'Load config, About section (app version) |
 | `click_n_load` | Bottom sheet to configure Click'N'Load target |
 | `error_dialog` | Shared error dialog |
 

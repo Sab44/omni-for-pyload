@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/domain/models/app_settings.dart' as app_models;
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/repositories/i_app_info_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_settings_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/click_n_load/ui/click_n_load_bottom_sheet.dart';
@@ -31,6 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _viewModel = SettingsViewModel(
       settingsRepository: getIt<ISettingsRepository>(),
+      appInfoRepository: getIt<IAppInfoRepository>(),
       serverRepository: widget.server != null
           ? getIt<IServerRepository>()
           : null,
@@ -78,7 +80,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSectionTitle('Server settings'),
             const SizedBox(height: 12),
             _buildClickNLoadOption(),
+            const SizedBox(height: 32),
           ],
+
+          // About Section
+          _buildSectionTitle('About'),
+          const SizedBox(height: 12),
+          _buildVersionInfo(),
         ],
       ),
     );
@@ -146,6 +154,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onChanged: (bool value) {
             _viewModel.setSkipSelectionScreenIfOnlyOneServer(value);
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVersionInfo() {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.info_outline),
+        title: const Text('Version'),
+        trailing: Text(
+          _viewModel.appVersion ?? '–',
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
       ),
     );

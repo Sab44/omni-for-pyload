@@ -1,30 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:omni_for_pyload/domain/models/app_settings.dart' as app_models;
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/repositories/i_app_info_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_settings_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/app.dart' show themeNotifier;
 
 class SettingsViewModel extends ChangeNotifier {
+  static final _log = Logger('SettingsViewModel');
+
   final ISettingsRepository _settingsRepository;
+  final IAppInfoRepository _appInfoRepository;
   final IServerRepository? _serverRepository;
   final Future<void> Function()? _onClickNLoadConfigChanged;
   app_models.AppSettings _settings = const app_models.AppSettings();
   final Server? _server;
+  String? _appVersion;
+  bool _isDisposed = false;
 
   SettingsViewModel({
     required this._settingsRepository,
+    required this._appInfoRepository,
     this._serverRepository,
     this._server,
     this._onClickNLoadConfigChanged,
   }) {
     _loadSettings();
+    _loadAppVersion();
   }
 
   app_models.AppSettings get settings => _settings;
   app_models.ThemeMode get themeMode => _settings.themeMode;
   bool get skipSelectionScreenIfOnlyOneServer =>
       _settings.skipSelectionScreenIfOnlyOneServer;
+
+  /// The installed app version, or null while loading or if it could not be read
+  String? get appVersion => _appVersion;
 
   /// The server being configured, if any
   Server? get server => _server;
@@ -34,7 +46,23 @@ class SettingsViewModel extends ChangeNotifier {
 
   Future<void> _loadSettings() async {
     _settings = await _settingsRepository.loadSettings();
-    notifyListeners();
+    if (!_isDisposed) notifyListeners();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      _appVersion = await _appInfoRepository.getAppVersion();
+    } catch (e, stackTrace) {
+      _log.warning('Could not read app version', e, stackTrace);
+      return;
+    }
+    if (!_isDisposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 
   Future<void> setThemeMode(app_models.ThemeMode themeMode) async {
