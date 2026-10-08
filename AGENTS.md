@@ -91,7 +91,7 @@ Only the selected tab polls. Polling pauses when the app is backgrounded or the 
 
 | Workflow | Trigger | Action |
 |---|---|---|
-| `flutter-tests.yml` | push / PR to `main` | `flutter test` on Flutter 3.38.0 |
+| `flutter-tests.yml` | push / PR to `main` | `flutter test` on latest stable Flutter |
 | `build-and-release.yml` | manual (`workflow_dispatch`, optional prerelease) | Builds APK + unsigned IPA, creates GitHub release `v<pubspec version>` |
 
 Release steps: bump `version` in `pubspec.yaml` → run release workflow → add the new version entry (size, date, download URL) to `ios/AltStoreSource.json`.
