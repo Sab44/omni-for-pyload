@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
+import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/add_server/viewmodel/add_server_viewmodel.dart';
 
+/// Form to add a new server, or to edit [server] if given
 class AddServerScreen extends StatefulWidget {
-  const AddServerScreen({super.key});
+  final Server? server;
+
+  const AddServerScreen({super.key, this.server});
 
   @override
   State<AddServerScreen> createState() => _AddServerScreenState();
@@ -25,6 +29,8 @@ class _AddServerScreenState extends State<AddServerScreen> {
   bool _allowInsecureConnections = false;
   bool _isLoading = false;
 
+  bool get _isEditing => widget.server != null;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +38,16 @@ class _AddServerScreenState extends State<AddServerScreen> {
       serverRepository: getIt<IServerRepository>(),
       pyLoadApiRepository: getIt<IPyLoadApiRepository>(),
     );
+
+    final server = widget.server;
+    if (server != null) {
+      _nameController.text = server.name;
+      _ipController.text = server.ip;
+      _portController.text = server.port.toString();
+      _apiKeyController.text = server.apiKey;
+      _isHttp = server.protocol == 'http';
+      _allowInsecureConnections = server.allowInsecure;
+    }
   }
 
   @override
@@ -61,20 +77,33 @@ class _AddServerScreenState extends State<AddServerScreen> {
     );
   }
 
-  Future<void> _handleAddServer() async {
+  Future<void> _handleSubmit() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      await _viewModel.validateAndAddServer(
-        name: _nameController.text.trim(),
-        ip: _ipController.text.trim(),
-        port: _portController.text.trim(),
-        apiKey: _apiKeyController.text.trim(),
-        protocol: _isHttp ? "http" : "https",
-        allowInsecureConnections: _allowInsecureConnections,
-      );
+      final original = widget.server;
+      if (original != null) {
+        await _viewModel.validateAndUpdateServer(
+          original: original,
+          name: _nameController.text.trim(),
+          ip: _ipController.text.trim(),
+          port: _portController.text.trim(),
+          apiKey: _apiKeyController.text.trim(),
+          protocol: _isHttp ? "http" : "https",
+          allowInsecureConnections: _allowInsecureConnections,
+        );
+      } else {
+        await _viewModel.validateAndAddServer(
+          name: _nameController.text.trim(),
+          ip: _ipController.text.trim(),
+          port: _portController.text.trim(),
+          apiKey: _apiKeyController.text.trim(),
+          protocol: _isHttp ? "http" : "https",
+          allowInsecureConnections: _allowInsecureConnections,
+        );
+      }
 
       if (mounted) {
         Navigator.pop(context, true);
@@ -94,7 +123,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: const Text('Add new server'),
+        title: Text(_isEditing ? 'Edit server' : 'Add new server'),
         centerTitle: true,
         elevation: 0,
       ),
@@ -213,7 +242,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Add server button
+                // Submit button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 16.0, 0, 16.0),
                   child: SizedBox(
@@ -225,7 +254,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: _isLoading ? null : _handleAddServer,
+                      onPressed: _isLoading ? null : _handleSubmit,
                       child: _isLoading
                           ? const SizedBox(
                               height: 20,
@@ -237,7 +266,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
                               mainAxisSize: MainAxisSize.max,
                               children: [
                                 Text(
-                                  'Add server',
+                                  _isEditing ? 'Save changes' : 'Add server',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,

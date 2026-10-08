@@ -24,12 +24,22 @@ class ServerRepository implements IServerRepository {
         .toList();
 
     // Reattach API key from secure storage
+    var hasPlaintextApiKeys = false;
     for (var i = 0; i < servers.length; i++) {
       final server = servers[i];
       final apiKey = await _readApiKey(server.ip, server.port);
       if (apiKey != null) {
         servers[i] = server.copyWith(apiKey: apiKey);
+      } else if (server.apiKey.isNotEmpty) {
+        // Key only exists in plain text; move it to secure storage
+        await _writeApiKey(server.ip, server.port, server.apiKey);
       }
+      if (server.apiKey.isNotEmpty) hasPlaintextApiKeys = true;
+    }
+
+    // Earlier versions could persist API keys in shared preferences
+    if (hasPlaintextApiKeys) {
+      await _saveServers(prefs, servers);
     }
 
     return servers;
@@ -42,12 +52,8 @@ class ServerRepository implements IServerRepository {
     final currentServers = await getAllServers();
     // Store API key in secure storage and add server without API key to list
     await _writeApiKey(server.ip, server.port, server.apiKey);
-    final safeServer = server.copyWith(apiKey: '');
-    currentServers.add(safeServer);
-    final serversJson = jsonEncode(
-      currentServers.map((s) => s.toJson()).toList(),
-    );
-    await prefs.setString(_serversKey, serversJson);
+    currentServers.add(server);
+    await _saveServers(prefs, currentServers);
   }
 
   /// Check if a server with the same IP and port already exists
@@ -65,10 +71,7 @@ class ServerRepository implements IServerRepository {
     currentServers.removeWhere(
       (server) => server.ip == ip && server.port == port,
     );
-    final serversJson = jsonEncode(
-      currentServers.map((s) => s.toJson()).toList(),
-    );
-    await prefs.setString(_serversKey, serversJson);
+    await _saveServers(prefs, currentServers);
     // Remove API key stored for this server
     try {
       await _deleteApiKey(ip, port);
@@ -86,12 +89,33 @@ class ServerRepository implements IServerRepository {
     if (index != -1) {
       // Update API key in secure storage and update server in list
       await _writeApiKey(server.ip, server.port, server.apiKey);
-      final safeServer = server.copyWith(apiKey: '');
-      currentServers[index] = safeServer;
-      final serversJson = jsonEncode(
-        currentServers.map((s) => s.toJson()).toList(),
-      );
-      await prefs.setString(_serversKey, serversJson);
+      currentServers[index] = server;
+      await _saveServers(prefs, currentServers);
+    }
+  }
+
+  /// Replace a server, which may change its IP and port
+  @override
+  Future<void> replaceServer(Server original, Server updated) async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentServers = await getAllServers();
+    final index = currentServers.indexWhere(
+      (s) => s.ip == original.ip && s.port == original.port,
+    );
+    if (index == -1) {
+      throw StateError('Server ${original.ip}:${original.port} does not exist');
+    }
+
+    // Write the new API key before updating the list, and delete the old one
+    // last, so an interrupted update never leaves a server without its key
+    await _writeApiKey(updated.ip, updated.port, updated.apiKey);
+    currentServers[index] = updated;
+    await _saveServers(prefs, currentServers);
+
+    final keyChanged =
+        original.ip != updated.ip || original.port != updated.port;
+    if (keyChanged) {
+      await _deleteApiKey(original.ip, original.port);
     }
   }
 
@@ -105,6 +129,18 @@ class ServerRepository implements IServerRepository {
       await _deleteApiKey(server.ip, server.port);
     }
     await prefs.remove(_serversKey);
+  }
+
+  /// Persist the server list. API keys are never written to shared
+  /// preferences; they live in secure storage only.
+  Future<void> _saveServers(
+    SharedPreferences prefs,
+    List<Server> servers,
+  ) async {
+    final serversJson = jsonEncode(
+      servers.map((s) => s.copyWith(apiKey: '').toJson()).toList(),
+    );
+    await prefs.setString(_serversKey, serversJson);
   }
 
   /// Secure storage helpers

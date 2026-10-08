@@ -103,6 +103,14 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Edit server'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _editServer(server);
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
                 title: const Text('Remove server'),
                 onTap: () {
@@ -115,6 +123,18 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
         );
       },
     );
+  }
+
+  Future<void> _editServer(Server server) async {
+    final result = await Navigator.pushNamed(
+      context,
+      '/edit-server',
+      arguments: server,
+    );
+    // Reload servers if the server was changed
+    if (result == true) {
+      await _loadServers();
+    }
   }
 
   void _showDeleteConfirmation(BuildContext context, Server server) {

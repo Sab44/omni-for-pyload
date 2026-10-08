@@ -44,8 +44,8 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 
 | Feature | Purpose |
 |---|---|
-| `server_overview` | List of saved servers with live status; start screen (optionally auto-opens the only server) |
-| `add_server` | Add server form; validates connection via API before saving |
+| `server_overview` | List of saved servers with live status; start screen (optionally auto-opens the only server). Per-server menu: edit, remove |
+| `add_server` | Add server form, also used to edit a server (`/edit-server` route, `AddServerScreen(server:)`). Same validation for both; validates connection via API before saving |
 | `server` | Main per-server screen: tabs Overview (active downloads) / Queue / Collector, multi-select actions, add links, upload DLC, Click'N'Load control |
 | `download_detail` | Package details incl. files, package password |
 | `settings` | Theme, start-screen behavior, per-server Click'N'Load config, About section (app version) |
@@ -56,7 +56,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 
 | Concern | Implementation |
 |---|---|
-| Server list | `shared_preferences` key `servers` (JSON). API key stripped before persisting |
+| Server list | `shared_preferences` key `servers` (JSON), written only via `_saveServers`, which strips API keys. Editing uses `replaceServer(original, updated)`: keeps list position, moves the API key if IP/port changed |
 | API keys | `flutter_secure_storage`, key `server_credentials:<ip>:<port>`. Servers are identified by `ip` + `port` |
 | App settings | `shared_preferences` key `app_settings` (JSON) |
 | pyLoad API | `PyLoadApiRepository` wraps `PyLoadRESTApi`; auth header `X-API-Key`; base URL `<protocol>://<ip>:<port>`; API instance cached per server connection params |

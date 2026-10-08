@@ -17,6 +17,12 @@ abstract class IServerRepository {
   /// Update an existing server
   Future<void> updateServer(Server server);
 
+  /// Replace [original] with [updated], keeping its position in the list
+  ///
+  /// [updated] may have a different IP or port. The stored API key is moved
+  /// accordingly. Throws a [StateError] if [original] does not exist.
+  Future<void> replaceServer(Server original, Server updated);
+
   /// Clear all servers
   Future<void> clearAllServers();
 }

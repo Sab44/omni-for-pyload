@@ -167,6 +167,12 @@ class _AppState extends State<App> {
             builder: (context) => ServerScreen(server: server),
           );
         }
+        if (settings.name == '/edit-server') {
+          final server = settings.arguments as Server;
+          return MaterialPageRoute(
+            builder: (context) => AddServerScreen(server: server),
+          );
+        }
         if (settings.name == '/settings') {
           // Settings can be opened with or without server context
           final args = settings.arguments as Map<String, dynamic>?;

@@ -273,6 +273,14 @@ class MockIServerRepository extends _i1.Mock implements _i6.IServerRepository {
   ) as _i4.Future<void>);
 
   @override
+  _i4.Future<void> replaceServer(_i5.Server? original, _i5.Server? updated) =>
+      (super.noSuchMethod(
+        Invocation.method(#replaceServer, [original, updated]),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
   _i4.Future<void> clearAllServers() => (super.noSuchMethod(
     Invocation.method(#clearAllServers, []),
     returnValue: _i4.Future<void>.value(),

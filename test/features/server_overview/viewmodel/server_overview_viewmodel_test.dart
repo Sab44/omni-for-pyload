@@ -197,6 +197,9 @@ void main() {
           .thenAnswer((_) async => [server]);
       when(mockServerRepository.removeServer(any, any))
           .thenAnswer((_) async => Future.value());
+      // Keep the status request pending so polling does not notify listeners
+      when(mockPyLoadApiRepository.getServerStatus(any))
+          .thenAnswer((_) => Completer<ServerStatus>().future);
 
       await viewModel.loadServers();
 
@@ -208,6 +211,80 @@ void main() {
       await viewModel.removeServer(server);
 
       expect(listenerCount, equals(1));
+    });
+
+    test('polling uses the edited configuration after reload', () {
+      fakeAsync((async) {
+        final edited = server.copyWith(protocol: 'https', apiKey: 'new-key');
+        var stored = [server];
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => stored);
+        when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
+          (_) async => ServerStatus(
+            pause: false,
+            active: 0,
+            queue: 0,
+            total: 0,
+            speed: 0,
+            download: false,
+            reconnect: false,
+            captcha: false,
+            proxy: false,
+          ),
+        );
+
+        viewModel.loadServers();
+        async.flushMicrotasks();
+        verify(mockPyLoadApiRepository.getServerStatus(server)).called(1);
+
+        stored = [edited];
+        viewModel.loadServers();
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 2, milliseconds: 100));
+
+        verify(mockPyLoadApiRepository.getServerStatus(edited)).called(1);
+        verifyNever(mockPyLoadApiRepository.getServerStatus(server));
+      });
+    });
+
+    test('loadServers drops the status of an edited server', () {
+      fakeAsync((async) {
+        final edited = server.copyWith(name: 'Renamed');
+        var stored = [server];
+        final pending = Completer<ServerStatus>();
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => stored);
+        when(mockPyLoadApiRepository.getServerStatus(server))
+            .thenThrow(Exception('offline'));
+        when(mockPyLoadApiRepository.getServerStatus(edited))
+            .thenAnswer((_) => pending.future);
+
+        viewModel.loadServers();
+        async.flushMicrotasks();
+        expect(viewModel.statuses['192.168.1.1:8000'], 'offline');
+
+        stored = [edited];
+        viewModel.loadServers();
+        async.flushMicrotasks();
+
+        expect(viewModel.statuses.containsKey('192.168.1.1:8000'), isFalse);
+      });
+    });
+
+    test('loadServers keeps the status of an unchanged server', () {
+      fakeAsync((async) {
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server.copyWith()]);
+        when(mockPyLoadApiRepository.getServerStatus(any))
+            .thenThrow(Exception('offline'));
+
+        viewModel.loadServers();
+        async.flushMicrotasks();
+        viewModel.loadServers();
+        async.flushMicrotasks();
+
+        expect(viewModel.statuses['192.168.1.1:8000'], 'offline');
+      });
     });
   });
 }

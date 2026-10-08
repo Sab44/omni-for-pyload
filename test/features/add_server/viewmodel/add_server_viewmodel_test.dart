@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/add_server/viewmodel/add_server_viewmodel.dart';
@@ -354,6 +355,136 @@ void main() {
           ),
         ),
       );
+    });
+
+    group('validateAndUpdateServer', () {
+      late Server original;
+
+      setUp(() {
+        original = Server(
+          ip: '192.168.1.1',
+          port: 8000,
+          apiKey: 'old-key',
+          protocol: 'http',
+          allowInsecure: false,
+          name: 'Home',
+          clickNLoadIp: '192.168.1.1',
+          clickNLoadPort: 9666,
+          clickNLoadProtocol: 'http',
+          clickNLoadAllowInsecure: false,
+        );
+        when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
+          (_) async => ServerStatus(
+            pause: false,
+            active: 0,
+            queue: 0,
+            total: 0,
+            speed: 0,
+            download: false,
+            reconnect: false,
+            captcha: false,
+            proxy: false,
+          ),
+        );
+      });
+
+      Future<Server> update({
+        String name = 'Home',
+        String ip = '192.168.1.1',
+        String port = '8000',
+        String apiKey = 'old-key',
+        String protocol = 'http',
+        bool allowInsecureConnections = false,
+      }) => viewModel.validateAndUpdateServer(
+        original: original,
+        name: name,
+        ip: ip,
+        port: port,
+        apiKey: apiKey,
+        protocol: protocol,
+        allowInsecureConnections: allowInsecureConnections,
+      );
+
+      test(
+        'returns the original without saving when nothing changed',
+        () async {
+          final result = await update();
+
+          expect(result, same(original));
+          verifyNever(mockPyLoadApiRepository.getServerStatus(any));
+          verifyNever(mockServerRepository.replaceServer(any, any));
+        },
+      );
+
+      test(
+        'saves changes and keeps the Click\'N\'Load configuration',
+        () async {
+          final result = await update(
+            name: 'Office',
+            apiKey: 'new-key',
+            protocol: 'https',
+            allowInsecureConnections: true,
+          );
+
+          expect(result.name, 'Office');
+          expect(result.apiKey, 'new-key');
+          expect(result.protocol, 'https');
+          expect(result.allowInsecure, isTrue);
+          expect(result.clickNLoadPort, 9666);
+          verify(mockPyLoadApiRepository.getServerStatus(result)).called(1);
+          verify(mockServerRepository.replaceServer(original, result))
+              .called(1);
+        },
+      );
+
+      test(
+        'does not check for duplicates when IP and port are unchanged',
+        () async {
+          await update(name: 'Office');
+
+          verifyNever(mockServerRepository.serverExists(any, any));
+        },
+      );
+
+      test('rejects an IP and port used by another server', () async {
+        when(mockServerRepository.serverExists('192.168.1.2', 8000))
+            .thenAnswer((_) async => true);
+
+        await expectLater(
+          update(ip: '192.168.1.2'),
+          throwsA(contains('A server with this IP and port already exists')),
+        );
+        verifyNever(mockServerRepository.replaceServer(any, any));
+      });
+
+      test('accepts a new IP and port that is not in use', () async {
+        when(mockServerRepository.serverExists('192.168.1.2', 8080))
+            .thenAnswer((_) async => false);
+
+        final result = await update(ip: '192.168.1.2', port: '8080');
+
+        expect(result.ip, '192.168.1.2');
+        expect(result.port, 8080);
+        verify(mockServerRepository.replaceServer(original, result)).called(1);
+      });
+
+      test('applies the same field validation as adding', () async {
+        await expectLater(update(ip: ''), throwsA(contains('IP or hostname')));
+        await expectLater(update(port: '0'), throwsA(contains('between 1')));
+        await expectLater(update(apiKey: ''), throwsA(contains('API Key')));
+        verifyNever(mockServerRepository.replaceServer(any, any));
+      });
+
+      test('does not save when the connection test fails', () async {
+        when(mockPyLoadApiRepository.getServerStatus(any))
+            .thenThrow(ApiException(401, 'Authentication failed'));
+
+        await expectLater(
+          update(apiKey: 'wrong-key'),
+          throwsA(isA<ApiException>()),
+        );
+        verifyNever(mockServerRepository.replaceServer(any, any));
+      });
     });
   });
 }

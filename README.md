@@ -105,7 +105,6 @@ Make sure to copy the API key when it is shown as you will not be able to view i
 ## Roadmap
 
 * Improve error handling
-* Allow editing a server after it has been added
 * Support managing pyLoad server settings from the app
 * Show estimated time left for downloads
 * Allow receiving URLs via the share action

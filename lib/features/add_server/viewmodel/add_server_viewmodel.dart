@@ -21,6 +21,71 @@ class AddServerViewModel {
     required String protocol,
     required bool allowInsecureConnections,
   }) async {
+    final server = await _validate(
+      name: name,
+      ip: ip,
+      port: port,
+      apiKey: apiKey,
+      protocol: protocol,
+      allowInsecureConnections: allowInsecureConnections,
+    );
+
+    // Test the connection to the server and verify authentication
+    await _pyLoadApiRepository.getServerStatus(server);
+
+    await _serverRepository.addServer(server);
+
+    return server;
+  }
+
+  /// Validate the edited fields and replace [original] with the result
+  ///
+  /// Uses the same validation as [validateAndAddServer]. Settings that are not
+  /// part of the form (Click'N'Load) are kept. If nothing changed, [original]
+  /// is returned without saving or contacting the server.
+  /// Returns the updated server if successful, or throws an exception with error message
+  Future<Server> validateAndUpdateServer({
+    required Server original,
+    required String name,
+    required String ip,
+    required String port,
+    required String apiKey,
+    required String protocol,
+    required bool allowInsecureConnections,
+  }) async {
+    final server = await _validate(
+      original: original,
+      name: name,
+      ip: ip,
+      port: port,
+      apiKey: apiKey,
+      protocol: protocol,
+      allowInsecureConnections: allowInsecureConnections,
+    );
+
+    if (server == original) return original;
+
+    // Test the connection to the server and verify authentication
+    await _pyLoadApiRepository.getServerStatus(server);
+
+    await _serverRepository.replaceServer(original, server);
+
+    return server;
+  }
+
+  /// Validates the form fields and builds the resulting server
+  ///
+  /// When editing, [original] is the server being edited: its remaining
+  /// settings are kept and it is not reported as its own duplicate.
+  Future<Server> _validate({
+    Server? original,
+    required String name,
+    required String ip,
+    required String port,
+    required String apiKey,
+    required String protocol,
+    required bool allowInsecureConnections,
+  }) async {
     // Validate and default server name
     final serverName = name.trim().isEmpty ? 'pyLoad' : name.trim();
 
@@ -47,12 +112,26 @@ class AddServerViewModel {
     }
 
     // Check if server with same IP and port already exists
-    final exists = await _serverRepository.serverExists(ip, portNumber);
-    if (exists) {
-      throw 'A server with this IP and port already exists';
+    final isSameServer = original?.ip == ip && original?.port == portNumber;
+    if (!isSameServer) {
+      final exists = await _serverRepository.serverExists(ip, portNumber);
+      if (exists) {
+        throw 'A server with this IP and port already exists';
+      }
     }
 
-    final server = Server(
+    if (original != null) {
+      return original.copyWith(
+        ip: ip,
+        port: portNumber,
+        apiKey: apiKey,
+        protocol: protocol,
+        name: serverName,
+        allowInsecure: allowInsecureConnections,
+      );
+    }
+
+    return Server(
       ip: ip,
       port: portNumber,
       apiKey: apiKey,
@@ -60,12 +139,5 @@ class AddServerViewModel {
       name: serverName,
       allowInsecure: allowInsecureConnections,
     );
-
-    // Test the connection to the server and verify authentication
-    await _pyLoadApiRepository.getServerStatus(server);
-
-    await _serverRepository.addServer(server);
-
-    return server;
   }
 }
