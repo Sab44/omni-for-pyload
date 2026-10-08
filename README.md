@@ -10,8 +10,8 @@ It is available for both Android and iOS.
 an [issue](https://github.com/Sab44/omni_for_pyload/issues) if it is not listed there.
 
 > [!WARNING]
-> Starting from version `0.2.0`, a pyLoad version of `0.5.0b3.dev97` or newer is required and you need to [create an API key](#Generate-an-API-key) when adding a server.  
-> Versions `0.1.x` require a minimum pyLoad version of `0.5.0b3.dev94`. These app versions are deprecated and will be removed in the future.
+> A pyLoad version of `0.5.0b3.dev98` or newer is required.  
+> You need to [create an API key](#Generate-an-API-key) before you can add a server.
 
 ## Screenshots
 
