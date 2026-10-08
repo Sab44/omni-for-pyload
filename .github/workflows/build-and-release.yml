@@ -7,10 +7,14 @@ on:
         description: 'Create as prerelease?'
         required: false
         default: 'false'
+      altstore_description:
+        description: 'What''s new, shown in AltStore (use \n for line breaks). Defaults to a link to the release.'
+        required: false
+        default: ''
 
 jobs:
-  build-android:
-    name: Build Android APK
+  check-version:
+    name: Check version
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -22,7 +26,35 @@ jobs:
         id: version
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d '[:space:]')
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\+[0-9]+)?$ ]]; then
+            echo "::error file=pubspec.yaml::Invalid version '$VERSION' in pubspec.yaml"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Fail if version was already released
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          # A leftover tag without a release would make the release point at an old commit, so check both
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+            echo "::error file=pubspec.yaml::Tag $TAG already exists. Bump the version in pubspec.yaml before releasing."
+            exit 1
+          fi
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "::error file=pubspec.yaml::Release $TAG already exists. Bump the version in pubspec.yaml before releasing."
+            exit 1
+          fi
+          echo "$TAG has not been released yet"
+
+  build-android:
+    name: Build Android APK
+    needs: check-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -44,26 +76,21 @@ jobs:
 
       - name: Rename APK with version
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/omni_for_pyload-${{ steps.version.outputs.version }}.apk
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/omni_for_pyload-${{ needs.check-version.outputs.version }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/omni_for_pyload-${{ steps.version.outputs.version }}.apk
+          path: build/app/outputs/flutter-apk/omni_for_pyload-${{ needs.check-version.outputs.version }}.apk
 
   build-ios:
     name: Build iOS IPA
+    needs: check-version
     runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Extract version from pubspec.yaml
-        id: version
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d '[:space:]')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -81,18 +108,18 @@ jobs:
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r omni_for_pyload-${{ steps.version.outputs.version }}.ipa Payload
+          zip -r omni_for_pyload-${{ needs.check-version.outputs.version }}.ipa Payload
           rm -rf Payload
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: omni_for_pyload-${{ steps.version.outputs.version }}.ipa
+          path: omni_for_pyload-${{ needs.check-version.outputs.version }}.ipa
 
   release:
     name: Create GitHub Release
-    needs: [build-android, build-ios]
+    needs: [check-version, build-android, build-ios]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -112,13 +139,85 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.build-android.outputs.version }}
-          name: Release v${{ needs.build-android.outputs.version }}
+          tag_name: v${{ needs.check-version.outputs.version }}
+          name: Release v${{ needs.check-version.outputs.version }}
           body: |
             > **Note:** The iOS IPA is unsigned. You need AltStore or a similar sideloading tool to install it.
           generate_release_notes: true
           files: |
-            artifacts/omni_for_pyload-${{ needs.build-android.outputs.version }}.apk
-            artifacts/omni_for_pyload-${{ needs.build-android.outputs.version }}.ipa
+            artifacts/omni_for_pyload-${{ needs.check-version.outputs.version }}.apk
+            artifacts/omni_for_pyload-${{ needs.check-version.outputs.version }}.ipa
           draft: false
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+
+  update-altstore-source:
+    name: Update AltStore source
+    needs: [check-version, release]
+    # Prereleases are not published to AltStore users
+    if: github.event.inputs.prerelease != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Check out the branch head (not the triggering commit) so the update can be pushed
+          ref: ${{ github.ref_name }}
+
+      - name: Download IPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa
+          path: artifacts/
+
+      - name: Update AltStore source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check-version.outputs.version }}
+          DESCRIPTION: ${{ github.event.inputs.altstore_description }}
+        run: |
+          TAG="v$VERSION"
+          IPA="omni_for_pyload-$VERSION.ipa"
+
+          # Publish time and exact size of the uploaded IPA, as served by GitHub
+          RELEASE=$(gh release view "$TAG" --json publishedAt,assets,url)
+          DATE=$(jq -r '.publishedAt' <<< "$RELEASE")
+          SIZE=$(jq -r --arg name "$IPA" '.assets[] | select(.name == $name) | .size' <<< "$RELEASE")
+          DOWNLOAD_URL=$(jq -r --arg name "$IPA" '.assets[] | select(.name == $name) | .url' <<< "$RELEASE")
+          RELEASE_URL=$(jq -r '.url' <<< "$RELEASE")
+          if [[ -z "$SIZE" || -z "$DOWNLOAD_URL" ]]; then
+            echo "::error::Asset $IPA not found in release $TAG"
+            exit 1
+          fi
+
+          # Minimum iOS version of the built app
+          MIN_OS=$(unzip -p "artifacts/$IPA" Payload/Runner.app/Info.plist \
+            | python3 -c 'import plistlib, sys; print(plistlib.loads(sys.stdin.buffer.read())["MinimumOSVersion"])')
+          if [[ -z "$MIN_OS" ]]; then
+            echo "::error::Could not read MinimumOSVersion from $IPA"
+            exit 1
+          fi
+
+          # Marketing version without build number (pubspec "1.2.3+4" -> "1.2.3")
+          APP_VERSION="${VERSION%%+*}"
+          DESCRIPTION="${DESCRIPTION//\\n/$'\n'}"
+          DESCRIPTION="${DESCRIPTION:-See the release notes: $RELEASE_URL}"
+
+          .github/scripts/update_altstore_source.sh ios/AltStoreSource.json \
+            com.downloader.omniForPyload "$APP_VERSION" "$DATE" "$SIZE" "$DOWNLOAD_URL" "$MIN_OS" "$DESCRIPTION"
+
+          echo "Added $APP_VERSION (date $DATE, size $SIZE bytes, min iOS $MIN_OS)"
+          git diff
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet; then
+            echo "AltStore source already up to date"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ios/AltStoreSource.json
+          git commit -m "add v${{ needs.check-version.outputs.version }} to AltStore source"
+          git push
