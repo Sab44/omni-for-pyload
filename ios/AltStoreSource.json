@@ -17,9 +17,16 @@
                 "https://raw.githubusercontent.com/Sab44/omni_for_pyload/refs/heads/main/assets/screenshots/overview_dark.png",
                 "https://raw.githubusercontent.com/Sab44/omni_for_pyload/refs/heads/main/assets/screenshots/downloads_dark.png",
                 "https://raw.githubusercontent.com/Sab44/omni_for_pyload/refs/heads/main/assets/screenshots/upload_dlc_dark.png"
-                
             ],
             "versions": [
+                {
+                    "version": "0.2.2",
+                    "date": "2026-10-08T12:08:44Z",
+                    "size": 7761336,
+                    "downloadURL": "https://github.com/Sab44/omni-for-pyload/releases/download/v0.2.2/omni_for_pyload-0.2.2.ipa",
+                    "localizedDescription": "Added app version to settings screen\nOtherwise mostly maintenance.",
+                    "minOSVersion": "15.0"
+                },
                 {
                     "version": "0.2.1",
                     "date": "2026-04-21T19:44:00+02:00",
