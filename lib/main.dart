@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/domain/repositories/i_settings_repository.dart';
+
 import 'features/app.dart';
 
 void main() async {

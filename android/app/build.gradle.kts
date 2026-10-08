@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "com.downloader.omni_for_pyload"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android and flutter_secure_storage require compileSdk 37.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

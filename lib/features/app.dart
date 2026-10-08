@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'server_overview/ui/server_overview.dart';
 import 'add_server/ui/add_server.dart';
 import 'server/ui/server.dart';
 import 'download_detail/ui/download_detail.dart';
 import 'settings/ui/settings_screen.dart';
+
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/app_settings.dart' as app_models;
 import 'package:omni_for_pyload/core/service_locator.dart';

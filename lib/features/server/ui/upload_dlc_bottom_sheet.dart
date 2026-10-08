@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:openapi_client/api.dart';
@@ -30,48 +28,37 @@ class _UploadDlcBottomSheetState extends State<UploadDlcBottomSheet> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
-        withData: true,
-      );
+      final file = await FilePicker.pickFile(type: FileType.any);
+      if (file == null) return;
 
-      if (result != null && result.files.isNotEmpty) {
-        final file = result.files.first;
-
-        // Check file extension
-        if (!file.name.toLowerCase().endsWith('.dlc')) {
-          if (mounted) {
-            showErrorDialog(context, 'Only .dlc files are allowed');
-          }
-          return;
+      // Check file extension
+      if (!file.name.toLowerCase().endsWith('.dlc')) {
+        if (mounted) {
+          showErrorDialog(context, 'Only .dlc files are allowed');
         }
-
-        // Check file size
-        if (file.size > _maxFileSizeBytes) {
-          if (mounted) {
-            showErrorDialog(context, 'File size exceeds 1 MB limit');
-          }
-          return;
-        }
-
-        // Get file bytes
-        final bytes = file.bytes;
-        if (bytes == null) {
-          // On some platforms, we need to read from path
-          if (file.path != null) {
-            final fileData = await File(file.path!).readAsBytes();
-            setState(() {
-              _selectedFileName = file.name;
-              _selectedFileBytes = fileData;
-            });
-          }
-        } else {
-          setState(() {
-            _selectedFileName = file.name;
-            _selectedFileBytes = bytes;
-          });
-        }
+        return;
       }
+
+      // Check file size
+      final size = await file.length();
+      if (size == null || size > _maxFileSizeBytes) {
+        if (mounted) {
+          showErrorDialog(
+            context,
+            size == null
+                ? 'Could not read the selected file'
+                : 'File size exceeds 1 MB limit',
+          );
+        }
+        return;
+      }
+
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _selectedFileName = file.name;
+        _selectedFileBytes = bytes;
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
