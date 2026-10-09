@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>App uses the camera to scan the QR code of a pyLoad server.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>App uses local network to communicate with pyLoad.</string>
 	<key>UIApplicationSceneManifest</key>

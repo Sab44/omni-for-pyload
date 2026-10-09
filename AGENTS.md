@@ -45,7 +45,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | Feature | Purpose |
 |---|---|
 | `server_overview` | List of saved servers with live status; start screen (optionally auto-opens the only server). Per-server menu: edit, remove |
-| `add_server` | Add server form, also used to edit a server (`/edit-server` route, `AddServerScreen(server:)`). Same validation for both; validates connection via API before saving |
+| `add_server` | Add server form, also used to edit a server (`/edit-server` route, `AddServerScreen(server:)`). Same validation for both; validates connection via API before saving. `ScanServerQrScreen` (`/scan-server-qr`, `mobile_scanner`) adds a server from the QR code in pyLoad's web UI. "Add new server" in `server_overview` lets the user pick QR or manual |
 | `server` | Main per-server screen: tabs Overview (active downloads) / Queue / Collector, multi-select actions, add links, upload DLC, Click'N'Load control |
 | `download_detail` | Package details incl. files, package password |
 | `settings` | Theme, start-screen behavior, per-server Click'N'Load config, About section (app version) |

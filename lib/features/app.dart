@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'server_overview/ui/server_overview.dart';
 import 'add_server/ui/add_server.dart';
+import 'add_server/ui/scan_server_qr_screen.dart';
 import 'server/ui/server.dart';
 import 'download_detail/ui/download_detail.dart';
 import 'settings/ui/settings_screen.dart';
@@ -159,6 +160,7 @@ class _AppState extends State<App> {
       routes: {
         '/server-overview': (context) => const ServerOverviewScreen(),
         '/add-server': (context) => const AddServerScreen(),
+        '/scan-server-qr': (context) => const ScanServerQrScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/server') {

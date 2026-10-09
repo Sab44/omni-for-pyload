@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 ///
 /// This can be used across the app to display error messages in a consistent
 /// dialog format.
-void showErrorDialog(BuildContext context, String message) {
-  showDialog(
+Future<void> showErrorDialog(BuildContext context, String message) {
+  return showDialog(
     context: context,
     builder: (context) => AlertDialog(
       icon: Icon(

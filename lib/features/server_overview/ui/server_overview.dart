@@ -125,6 +125,83 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
     );
   }
 
+  Future<void> _showAddServerOptions(BuildContext context) async {
+    final route = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        final colorScheme = Theme.of(context).colorScheme;
+        return AlertDialog(
+          title: const Text('Add new server'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'An API key is required. To create one:',
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'pyLoad web UI → Settings → Users → Actions → '
+                'Manage API Keys → Generate\n'
+                'Then scan the QR code or copy the key.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context, '/scan-server-qr'),
+                child: const Column(
+                  children: [
+                    Icon(Icons.qr_code_scanner, size: 48),
+                    SizedBox(height: 12),
+                    Text(
+                      'Scan QR code',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: colorScheme.onSurface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context, '/add-server'),
+                icon: const Icon(Icons.edit),
+                label: const Text('Add server manually'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (route == null || !mounted) return;
+
+    final result = await Navigator.pushNamed(this.context, route);
+    // Reload servers if a new one was added
+    if (result == true) {
+      await _loadServers();
+    }
+  }
+
   Future<void> _editServer(Server server) async {
     final result = await Navigator.pushNamed(
       context,
@@ -287,18 +364,7 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () async {
-                    final result = await Navigator.pushNamed(
-                      context,
-                      '/add-server',
-                    );
-                    // Reload servers if a new one was added
-                    if (result == true) {
-                      setState(() {
-                        _loadServers();
-                      });
-                    }
-                  },
+                  onPressed: () => _showAddServerOptions(context),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.max,

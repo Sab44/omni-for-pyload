@@ -486,5 +486,104 @@ void main() {
         verifyNever(mockServerRepository.replaceServer(any, any));
       });
     });
+    group('QR code', () {
+      const qrCode =
+          'http://localhost:8000/qr-redirector#host=localhost&port=8000'
+          '&path=&ssl=false&key=pl_test-key';
+
+      test('parseQrCode extracts the server configuration', () {
+        final config = AddServerViewModel.parseQrCode(qrCode);
+
+        expect(config.host, 'localhost');
+        expect(config.port, '8000');
+        expect(config.path, '');
+        expect(config.ssl, false);
+        expect(config.apiKey, 'pl_test-key');
+      });
+
+      test('parseQrCode handles ssl and a path prefix', () {
+        final config = AddServerViewModel.parseQrCode(
+          'https://example.com:443/pyload/qr-redirector'
+          '#host=example.com&port=443&path=/pyload&ssl=true&key=abc',
+        );
+
+        expect(config.ssl, true);
+        expect(config.path, 'pyload');
+      });
+
+      test('parseQrCode rejects other QR codes', () {
+        for (final code in [
+          'some text',
+          'https://example.com/',
+          'http://localhost:8000/qr-redirector',
+          'http://localhost:8000/qr-redirector#host=localhost&port=8000',
+        ]) {
+          expect(
+            () => AddServerViewModel.parseQrCode(code),
+            throwsA(contains('not a valid pyLoad server QR code')),
+            reason: code,
+          );
+        }
+      });
+
+      test(
+        'addServerFromQrCode tests the connection and adds the server',
+        () async {
+          when(mockServerRepository.serverExists('localhost', 8000))
+              .thenAnswer((_) async => false);
+          when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
+            (_) async => ServerStatus(
+              pause: false,
+              active: 0,
+              queue: 0,
+              total: 0,
+              speed: 0,
+              download: false,
+              reconnect: false,
+              captcha: false,
+              proxy: false,
+            ),
+          );
+
+          final server = await viewModel.addServerFromQrCode(qrCode);
+
+          expect(server.ip, 'localhost');
+          expect(server.port, 8000);
+          expect(server.apiKey, 'pl_test-key');
+          expect(server.protocol, 'http');
+          expect(server.allowInsecure, false);
+          verify(mockPyLoadApiRepository.getServerStatus(any)).called(1);
+          verify(mockServerRepository.addServer(any)).called(1);
+        },
+      );
+
+      test(
+        'addServerFromQrCode does not add the server if connection fails',
+        () async {
+          when(mockServerRepository.serverExists('localhost', 8000))
+              .thenAnswer((_) async => false);
+          when(mockPyLoadApiRepository.getServerStatus(any))
+              .thenThrow(ApiException(401, 'Unauthorized'));
+
+          await expectLater(
+            viewModel.addServerFromQrCode(qrCode),
+            throwsA(isA<ApiException>()),
+          );
+          verifyNever(mockServerRepository.addServer(any));
+        },
+      );
+
+      test('addServerFromQrCode rejects a path prefix', () async {
+        await expectLater(
+          viewModel.addServerFromQrCode(
+            'http://localhost:8000/pyload/qr-redirector'
+            '#host=localhost&port=8000&path=pyload&ssl=false&key=abc',
+          ),
+          throwsA(contains('path prefix')),
+        );
+        verifyNever(mockPyLoadApiRepository.getServerStatus(any));
+        verifyNever(mockServerRepository.addServer(any));
+      });
+    });
   });
 }
