@@ -1,14 +1,27 @@
+import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 
+/// Thrown if iOS denies the app access to the server in the local network
+class LocalNetworkAccessDeniedException implements Exception {
+  const LocalNetworkAccessDeniedException();
+
+  @override
+  String toString() =>
+      'Omni is not allowed to access devices in your local network. '
+      'Please enable "Local Network" in the app settings and try again.';
+}
+
 class AddServerViewModel {
   final IServerRepository _serverRepository;
   final IPyLoadApiRepository _pyLoadApiRepository;
+  final ILocalNetworkRepository _localNetworkRepository;
 
   AddServerViewModel({
     required this._serverRepository,
     required this._pyLoadApiRepository,
+    required this._localNetworkRepository,
   });
 
   /// Validate and add a server
@@ -30,8 +43,7 @@ class AddServerViewModel {
       allowInsecureConnections: allowInsecureConnections,
     );
 
-    // Test the connection to the server and verify authentication
-    await _pyLoadApiRepository.getServerStatus(server);
+    await _testConnection(server);
 
     await _serverRepository.addServer(server);
 
@@ -126,12 +138,27 @@ class AddServerViewModel {
 
     if (server == original) return original;
 
-    // Test the connection to the server and verify authentication
-    await _pyLoadApiRepository.getServerStatus(server);
+    await _testConnection(server);
 
     await _serverRepository.replaceServer(original, server);
 
     return server;
+  }
+
+  /// Open the app's page in the system settings, e.g. to allow local network
+  /// access after a [LocalNetworkAccessDeniedException]
+  Future<void> openAppSettings() => _localNetworkRepository.openAppSettings();
+
+  /// Tests the connection to [server] and verifies authentication
+  ///
+  /// Throws [LocalNetworkAccessDeniedException] if the platform blocks access,
+  /// as the connection test would only fail with a generic error then.
+  Future<void> _testConnection(Server server) async {
+    if (await _localNetworkRepository.isAccessDenied(server)) {
+      throw const LocalNetworkAccessDeniedException();
+    }
+
+    await _pyLoadApiRepository.getServerStatus(server);
   }
 
   /// Validates the form fields and builds the resulting server

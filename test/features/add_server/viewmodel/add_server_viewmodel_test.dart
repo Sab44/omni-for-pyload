@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/add_server/viewmodel/add_server_viewmodel.dart';
@@ -9,19 +10,28 @@ import 'package:openapi_client/api.dart';
 
 import 'add_server_viewmodel_test.mocks.dart';
 
-@GenerateMocks([IServerRepository, IPyLoadApiRepository])
+@GenerateMocks([
+  IServerRepository,
+  IPyLoadApiRepository,
+  ILocalNetworkRepository,
+])
 void main() {
   group('AddServerViewModel', () {
     late MockIServerRepository mockServerRepository;
     late MockIPyLoadApiRepository mockPyLoadApiRepository;
+    late MockILocalNetworkRepository mockLocalNetworkRepository;
     late AddServerViewModel viewModel;
 
     setUp(() {
       mockServerRepository = MockIServerRepository();
       mockPyLoadApiRepository = MockIPyLoadApiRepository();
+      mockLocalNetworkRepository = MockILocalNetworkRepository();
+      when(mockLocalNetworkRepository.isAccessDenied(any))
+          .thenAnswer((_) async => false);
       viewModel = AddServerViewModel(
         serverRepository: mockServerRepository,
         pyLoadApiRepository: mockPyLoadApiRepository,
+        localNetworkRepository: mockLocalNetworkRepository,
       );
     });
 
@@ -357,6 +367,40 @@ void main() {
       );
     });
 
+    test(
+      'validateAndAddServer throws LocalNetworkAccessDeniedException '
+      'without testing the connection when local network access is denied',
+      () async {
+        when(mockServerRepository.serverExists('192.168.1.1', 8000))
+            .thenAnswer((_) async => false);
+        when(mockLocalNetworkRepository.isAccessDenied(any))
+            .thenAnswer((_) async => true);
+
+        await expectLater(
+          viewModel.validateAndAddServer(
+            name: 'Test Server',
+            ip: '192.168.1.1',
+            port: '8000',
+            apiKey: 'test-api-key',
+            protocol: 'http',
+            allowInsecureConnections: false,
+          ),
+          throwsA(isA<LocalNetworkAccessDeniedException>()),
+        );
+        verifyNever(mockPyLoadApiRepository.getServerStatus(any));
+        verifyNever(mockServerRepository.addServer(any));
+      },
+    );
+
+    test('openAppSettings opens the app settings', () async {
+      when(mockLocalNetworkRepository.openAppSettings())
+          .thenAnswer((_) async {});
+
+      await viewModel.openAppSettings();
+
+      verify(mockLocalNetworkRepository.openAppSettings()).called(1);
+    });
+
     group('validateAndUpdateServer', () {
       late Server original;
 
@@ -472,6 +516,18 @@ void main() {
         await expectLater(update(ip: ''), throwsA(contains('IP or hostname')));
         await expectLater(update(port: '0'), throwsA(contains('between 1')));
         await expectLater(update(apiKey: ''), throwsA(contains('API Key')));
+        verifyNever(mockServerRepository.replaceServer(any, any));
+      });
+
+      test('does not save when local network access is denied', () async {
+        when(mockLocalNetworkRepository.isAccessDenied(any))
+            .thenAnswer((_) async => true);
+
+        await expectLater(
+          update(apiKey: 'new-key'),
+          throwsA(isA<LocalNetworkAccessDeniedException>()),
+        );
+        verifyNever(mockPyLoadApiRepository.getServerStatus(any));
         verifyNever(mockServerRepository.replaceServer(any, any));
       });
 

@@ -8,6 +8,8 @@ import 'dart:async' as _i4;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:omni_for_pyload/domain/models/server.dart' as _i5;
+import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.dart'
+    as _i7;
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart'
     as _i6;
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart'
@@ -283,6 +285,29 @@ class MockIPyLoadApiRepository extends _i1.Mock
     String? password,
   ) => (super.noSuchMethod(
     Invocation.method(#setPackagePassword, [server, packageId, password]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
+}
+
+/// A class which mocks [ILocalNetworkRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockILocalNetworkRepository extends _i1.Mock
+    implements _i7.ILocalNetworkRepository {
+  MockILocalNetworkRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<bool> isAccessDenied(_i5.Server? server) => (super.noSuchMethod(
+    Invocation.method(#isAccessDenied, [server]),
+    returnValue: _i4.Future<bool>.value(false),
+  ) as _i4.Future<bool>);
+
+  @override
+  _i4.Future<void> openAppSettings() => (super.noSuchMethod(
+    Invocation.method(#openAppSettings, []),
     returnValue: _i4.Future<void>.value(),
     returnValueForMissingStub: _i4.Future<void>.value(),
   ) as _i4.Future<void>);

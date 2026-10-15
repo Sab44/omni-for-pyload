@@ -37,7 +37,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 
 - Layering: `UI → ViewModel → I*Repository (domain) → Repository (data) → openapi_client / storage`.
 - Pattern: MVVM. Each screen creates its view model in `initState`, injecting repositories via `getIt<I...>()`, and calls `setState` from an `addListener` callback. No Provider/Bloc/Riverpod.
-- DI (`core/service_locator.dart`): singletons for `IServerRepository`, `IPyLoadApiRepository`, `ISettingsRepository`, `IAppInfoRepository` (app version via `package_info_plus`). `ClickNLoadRepository` is not registered; it is constructed per `ClickNLoadServer`.
+- DI (`core/service_locator.dart`): singletons for `IServerRepository`, `IPyLoadApiRepository`, `ISettingsRepository`, `IAppInfoRepository` (app version via `package_info_plus`), `ILocalNetworkRepository` (iOS local network permission check, opens app settings). `ClickNLoadRepository` is not registered; it is constructed per `ClickNLoadServer`.
 - Navigation: named routes in `app.dart`. `/server`, `/settings`, `/download-detail` take arguments via `onGenerateRoute` (`Server`, or a `Map<String, dynamic>`).
 
 ### Features
@@ -61,6 +61,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | App settings | `shared_preferences` key `app_settings` (JSON) |
 | pyLoad API | `PyLoadApiRepository` wraps `PyLoadRESTApi`; auth header `X-API-Key`; base URL `<protocol>://<ip>:<port>`; API instance cached per server connection params |
 | Errors | `executeNetworkRequest` applies a 2 s timeout and maps errors to `ApiException` with user-facing messages (401 → auth message). Bulk actions return `Result { success, partial, failure }` |
+| iOS local network permission | No query API exists. Before the connection test, `AddServerViewModel` calls method channel `com.downloader.omni_for_pyload/local_network` (`checkAccess`, implemented in `AppDelegate.swift`): opens an `NWConnection` to the server and checks for `localNetworkDenied`, waiting for the user's answer while the system prompt is shown. Denied → `LocalNetworkAccessDeniedException`, dialog offers "Open Settings" |
 | Self-signed TLS | `Server.allowInsecure` → `HttpClientFactory.createClient(true)` disables cert validation |
 
 ### Polling (no push/websocket)

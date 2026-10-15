@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/add_server/viewmodel/add_server_viewmodel.dart';
+import 'package:omni_for_pyload/features/error_dialog/ui/error_dialog.dart';
 
 /// Form to add a new server, or to edit [server] if given
 class AddServerScreen extends StatefulWidget {
@@ -37,6 +39,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
     _viewModel = AddServerViewModel(
       serverRepository: getIt<IServerRepository>(),
       pyLoadApiRepository: getIt<IPyLoadApiRepository>(),
+      localNetworkRepository: getIt<ILocalNetworkRepository>(),
     );
 
     final server = widget.server;
@@ -110,7 +113,16 @@ class _AddServerScreenState extends State<AddServerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorDialog(e.toString());
+        if (e is LocalNetworkAccessDeniedException) {
+          showErrorDialog(
+            context,
+            e.toString(),
+            actionLabel: 'Open Settings',
+            onAction: _viewModel.openAppSettings,
+          );
+        } else {
+          _showErrorDialog(e.toString());
+        }
         setState(() {
           _isLoading = false;
         });
