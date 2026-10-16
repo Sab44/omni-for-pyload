@@ -7,6 +7,7 @@ import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
+import 'package:omni_for_pyload/features/server_overview/viewmodel/server_availability.dart';
 import 'package:openapi_client/api.dart';
 
 class ServerOverviewViewModel extends ChangeNotifier {
@@ -17,8 +18,8 @@ class ServerOverviewViewModel extends ChangeNotifier {
   final ClickNLoadController _clickNLoadController;
   List<Server> _servers = [];
 
-  /// Status per server
-  final Map<ServerId, String> _statuses = {};
+  /// Result of the last status check per server
+  final Map<ServerId, ServerAvailability> _statuses = {};
 
   /// Status poller per server, polling the server as it was when created
   final Map<ServerId, Poller<ServerStatus>> _pollers = {};
@@ -33,7 +34,11 @@ class ServerOverviewViewModel extends ChangeNotifier {
   });
 
   List<Server> get servers => _servers;
-  Map<ServerId, String> get statuses => _statuses;
+
+  /// Availability of the server [id]; [ServerAvailability.fetching] until it
+  /// has been checked
+  ServerAvailability statusOf(ServerId id) =>
+      _statuses[id] ?? ServerAvailability.fetching;
 
   @override
   void dispose() {
@@ -77,12 +82,12 @@ class ServerOverviewViewModel extends ChangeNotifier {
     final poller = Poller<ServerStatus>(
       interval: _serverStatusPollingInterval,
       fetch: () => _pyLoadApiRepository.getServerStatus(server),
-      onData: (_) => _showStatus(server.id, 'online'),
+      onData: (_) => _showStatus(server.id, ServerAvailability.online),
       onError: (error, stackTrace) {
         if (error is! PyLoadApiFailure) {
           _log.severe('Unexpected error while polling', error, stackTrace);
         }
-        _showStatus(server.id, 'offline');
+        _showStatus(server.id, ServerAvailability.offline);
       },
       // After a timeout, check again right away
       retryNowOn: (error) => error is PyLoadApiTimeout,
@@ -97,7 +102,7 @@ class ServerOverviewViewModel extends ChangeNotifier {
     _statuses.remove(id);
   }
 
-  void _showStatus(ServerId id, String status) {
+  void _showStatus(ServerId id, ServerAvailability status) {
     _statuses[id] = status;
     notifyListeners();
   }

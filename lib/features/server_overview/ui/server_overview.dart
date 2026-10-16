@@ -4,6 +4,7 @@ import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
+import 'package:omni_for_pyload/features/server_overview/viewmodel/server_availability.dart';
 import 'package:omni_for_pyload/features/server_overview/viewmodel/server_overview_viewmodel.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 
@@ -266,8 +267,7 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                       itemCount: _viewModel.servers.length,
                       itemBuilder: (context, index) {
                         final server = _viewModel.servers[index];
-                        final status =
-                            _viewModel.statuses[server.id] ?? 'fetching...';
+                        final status = _viewModel.statusOf(server.id);
                         final Color statusColor = _statusColor(status);
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12.0),
@@ -299,7 +299,7 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                                   ),
                                 ),
                                 Text(
-                                  'Status: $status',
+                                  'Status: ${_statusLabel(status)}',
                                   style: TextStyle(color: statusColor),
                                 ),
                               ],
@@ -378,16 +378,17 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
     );
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'online':
-        return Colors.green;
-      case 'offline':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
+  static String _statusLabel(ServerAvailability status) => switch (status) {
+    ServerAvailability.fetching => 'fetching...',
+    ServerAvailability.online => 'online',
+    ServerAvailability.offline => 'offline',
+  };
+
+  static Color _statusColor(ServerAvailability status) => switch (status) {
+    ServerAvailability.fetching => Colors.grey,
+    ServerAvailability.online => Colors.green,
+    ServerAvailability.offline => Colors.red,
+  };
 }
 
 extension APIKeyRedaction on String {

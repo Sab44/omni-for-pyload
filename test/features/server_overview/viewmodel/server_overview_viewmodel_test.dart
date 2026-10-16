@@ -11,6 +11,7 @@ import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_proxy.dart';
+import 'package:omni_for_pyload/features/server_overview/viewmodel/server_availability.dart';
 import 'package:omni_for_pyload/features/server_overview/viewmodel/server_overview_viewmodel.dart';
 import 'package:openapi_client/api.dart';
 
@@ -144,8 +145,8 @@ void main() {
         async.flushMicrotasks();
 
         expect(
-          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
-          equals('online'),
+          viewModel.statusOf(const ServerId('192.168.1.1', 8000)),
+          ServerAvailability.online,
         );
         // verify(mockPyLoadApiRepository.getServerStatus(any)).called(1); // Removed
 
@@ -168,8 +169,8 @@ void main() {
         async.flushMicrotasks();
 
         expect(
-          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
-          equals('offline'),
+          viewModel.statusOf(const ServerId('192.168.1.1', 8000)),
+          ServerAvailability.offline,
         );
 
         // Advance 2 seconds
@@ -201,8 +202,8 @@ void main() {
         async.flushMicrotasks();
 
         expect(
-          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
-          equals('offline'),
+          viewModel.statusOf(const ServerId('192.168.1.1', 8000)),
+          ServerAvailability.offline,
         );
 
         // Should poll immediately again (no 2s delay)
@@ -321,8 +322,8 @@ void main() {
         viewModel.loadServers();
         async.flushMicrotasks();
         expect(
-          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
-          'offline',
+          viewModel.statusOf(const ServerId('192.168.1.1', 8000)),
+          ServerAvailability.offline,
         );
 
         stored = [edited];
@@ -330,8 +331,8 @@ void main() {
         async.flushMicrotasks();
 
         expect(
-          viewModel.statuses.containsKey(const ServerId('192.168.1.1', 8000)),
-          isFalse,
+          viewModel.statusOf(const ServerId('192.168.1.1', 8000)),
+          ServerAvailability.fetching,
         );
       });
     });
@@ -430,8 +431,8 @@ void main() {
         async.flushMicrotasks();
 
         expect(
-          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
-          'offline',
+          viewModel.statusOf(const ServerId('192.168.1.1', 8000)),
+          ServerAvailability.offline,
         );
       });
     });
