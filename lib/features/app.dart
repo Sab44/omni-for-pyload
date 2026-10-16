@@ -179,13 +179,8 @@ class _AppState extends State<App> {
           // Settings can be opened with or without server context
           final args = settings.arguments as Map<String, dynamic>?;
           final server = args?['server'] as Server?;
-          final onStopClickNLoad =
-              args?['onStopClickNLoad'] as Future<void> Function()?;
           return MaterialPageRoute(
-            builder: (context) => SettingsScreen(
-              server: server,
-              onClickNLoadConfigChanged: onStopClickNLoad,
-            ),
+            builder: (context) => SettingsScreen(server: server),
           );
         }
         if (settings.name == '/download-detail') {

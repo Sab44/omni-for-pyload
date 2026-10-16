@@ -1,24 +1,17 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/domain/models/app_settings.dart' as app_models;
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_app_info_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_settings_repository.dart';
-import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 import 'package:omni_for_pyload/features/click_n_load/ui/click_n_load_bottom_sheet.dart';
 import 'package:omni_for_pyload/features/settings/viewmodel/settings_viewmodel.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Server? server;
-  final Future<void> Function()? onClickNLoadConfigChanged;
 
-  const SettingsScreen({
-    super.key,
-    this.server,
-    this.onClickNLoadConfigChanged,
-  });
+  const SettingsScreen({super.key, this.server});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -33,11 +26,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _viewModel = SettingsViewModel(
       settingsRepository: getIt<ISettingsRepository>(),
       appInfoRepository: getIt<IAppInfoRepository>(),
-      serverRepository: widget.server != null
-          ? getIt<IServerRepository>()
+      clickNLoadController: widget.server != null
+          ? getIt<ClickNLoadController>()
           : null,
       server: widget.server,
-      onClickNLoadConfigChanged: widget.onClickNLoadConfigChanged,
     );
     _viewModel.addListener(_onViewModelChanged);
   }
@@ -75,8 +67,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSkipSelectionOption(),
           const SizedBox(height: 32),
 
-          // Server Settings Section (only show when opened from ServerScreen on Android)
-          if (_viewModel.hasServerContext && Platform.isAndroid) ...[
+          // Server Settings Section (only when Click'N'Load can be configured)
+          if (_viewModel.isClickNLoadSupported) ...[
             _buildSectionTitle('Server settings'),
             const SizedBox(height: 12),
             _buildClickNLoadOption(),

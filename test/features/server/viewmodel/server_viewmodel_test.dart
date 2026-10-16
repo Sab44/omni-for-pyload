@@ -1,13 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_proxy.dart';
 import 'package:omni_for_pyload/features/server/viewmodel/server_viewmodel.dart';
 import 'package:openapi_client/api.dart';
 
+import '../../click_n_load/fake_click_n_load_platform.dart';
 import 'server_viewmodel_test.mocks.dart';
 
 @GenerateMocks([IPyLoadApiRepository, IServerRepository])
@@ -15,12 +20,33 @@ void main() {
   group('ServerViewModel', () {
     late MockIPyLoadApiRepository mockPyLoadApiRepository;
     late MockIServerRepository mockServerRepository;
+    late FakeClickNLoadPlatform clickNLoadPlatform;
+    late ClickNLoadController clickNLoadController;
     late Server server;
     late ServerViewModel viewModel;
+
+    ClickNLoadController createClickNLoadController() => ClickNLoadController(
+      platform: clickNLoadPlatform,
+      serverRepository: mockServerRepository,
+      proxyFactory: (target) => ClickNLoadProxy(
+        target: target,
+        client: MockClient((_) async => http.Response('ok', 200)),
+        port: 0,
+      ),
+    );
+
+    ServerViewModel createViewModel() => ServerViewModel(
+      server: server,
+      pyLoadApiRepository: mockPyLoadApiRepository,
+      serverRepository: mockServerRepository,
+      clickNLoadController: clickNLoadController,
+    );
 
     setUp(() {
       mockPyLoadApiRepository = MockIPyLoadApiRepository();
       mockServerRepository = MockIServerRepository();
+      clickNLoadPlatform = FakeClickNLoadPlatform();
+      clickNLoadController = createClickNLoadController();
       server = Server(
         ip: '192.168.1.100',
         port: 8000,
@@ -45,15 +71,12 @@ void main() {
         ),
       );
 
-      viewModel = ServerViewModel(
-        server: server,
-        pyLoadApiRepository: mockPyLoadApiRepository,
-        serverRepository: mockServerRepository,
-      );
+      viewModel = createViewModel();
     });
 
-    tearDown(() {
+    tearDown(() async {
       viewModel.dispose();
+      await clickNLoadController.stop();
     });
 
     test('initial state is correct', () {
@@ -201,11 +224,7 @@ void main() {
         ),
       );
 
-      final pausedViewModel = ServerViewModel(
-        server: server,
-        pyLoadApiRepository: mockPyLoadApiRepository,
-        serverRepository: mockServerRepository,
-      );
+      final pausedViewModel = createViewModel();
 
       // Allow the constructor's async fetch to complete
       await Future.delayed(Duration.zero);
@@ -427,6 +446,9 @@ void main() {
       });
 
       test('configureClickNLoad persists a new server snapshot', () async {
+        when(mockServerRepository.getServer(server.id))
+            .thenAnswer((_) async => server);
+
         final success = await viewModel.configureClickNLoad(
           ip: '192.168.1.5',
           port: 9666,
@@ -443,6 +465,8 @@ void main() {
       });
 
       test('configureClickNLoad keeps the server if saving fails', () async {
+        when(mockServerRepository.getServer(server.id))
+            .thenAnswer((_) async => server);
         when(mockServerRepository.updateServer(any))
             .thenThrow(Exception('storage error'));
 
@@ -456,6 +480,113 @@ void main() {
         expect(success, isFalse);
         expect(viewModel.server, server);
         expect(viewModel.hasClickNLoadConfigured, isFalse);
+      });
+    });
+
+    group('Click\'N\'Load', () {
+      const clickNLoad = ClickNLoadServer(
+        ip: '192.168.1.5',
+        port: 9666,
+        protocol: 'http',
+        allowInsecureConnections: false,
+      );
+      late Server configured;
+
+      setUp(() {
+        configured = server.copyWith(clickNLoad: () => clickNLoad);
+        when(mockServerRepository.getServer(server.id))
+            .thenAnswer((_) async => configured);
+        when(mockPyLoadApiRepository.getServerStatus(configured))
+            .thenAnswer((_) async => throw Exception('offline'));
+      });
+
+      test('starting uses the stored configuration', () async {
+        final result = await viewModel.startClickNLoad();
+
+        expect(result, ClickNLoadStartResult.started);
+        expect(viewModel.isClickNLoadRunning, isTrue);
+        expect(
+          clickNLoadController.state,
+          ClickNLoadRunning(server.id, clickNLoad),
+        );
+      });
+
+      test('starting is refused once the configuration was deleted', () async {
+        await viewModel.startClickNLoad();
+        await clickNLoadController.reconfigure(server.id, null);
+        when(mockServerRepository.getServer(server.id))
+            .thenAnswer((_) async => server);
+
+        final result = await viewModel.startClickNLoad();
+
+        expect(result, ClickNLoadStartResult.notConfigured);
+        expect(viewModel.isClickNLoadRunning, isFalse);
+        expect(clickNLoadPlatform.isRunning, isFalse);
+      });
+
+      test('starting is refused once the server was removed', () async {
+        when(mockServerRepository.getServer(server.id))
+            .thenAnswer((_) async => null);
+        viewModel.dispose();
+        server = configured;
+        viewModel = createViewModel();
+
+        final result = await viewModel.startClickNLoad();
+
+        expect(result, ClickNLoadStartResult.notConfigured);
+        expect(clickNLoadPlatform.startCount, 0);
+      });
+
+      test('starting while running reports already running', () async {
+        await viewModel.startClickNLoad();
+
+        final result = await viewModel.startClickNLoad();
+
+        expect(result, ClickNLoadStartResult.alreadyRunning);
+        expect(viewModel.isClickNLoadRunning, isTrue);
+      });
+
+      test('stopping from the notification updates the view model', () async {
+        await viewModel.startClickNLoad();
+        var notified = false;
+        viewModel.addListener(() => notified = true);
+
+        clickNLoadPlatform.stopFromNotification();
+        await pumpEventQueue();
+
+        expect(viewModel.isClickNLoadRunning, isFalse);
+        expect(notified, isTrue);
+      });
+
+      test('is not running when it forwards for another server', () async {
+        final other = configured.copyWith(ip: '192.168.1.2');
+        when(mockServerRepository.getServer(other.id))
+            .thenAnswer((_) async => other);
+        await clickNLoadController.start(other.id);
+
+        expect(viewModel.isClickNLoadRunning, isFalse);
+      });
+
+      test('reports whether the platform supports it', () {
+        expect(viewModel.isClickNLoadSupported, isTrue);
+
+        viewModel.dispose();
+        clickNLoadPlatform = FakeClickNLoadPlatform(isSupported: false);
+        clickNLoadController = createClickNLoadController();
+        viewModel = createViewModel();
+
+        expect(viewModel.isClickNLoadSupported, isFalse);
+      });
+
+      test('leaving the server screen stops it', () async {
+        await viewModel.startClickNLoad();
+
+        viewModel.dispose();
+        await pumpEventQueue();
+
+        expect(clickNLoadController.state, const ClickNLoadStopped());
+        expect(clickNLoadPlatform.isRunning, isFalse);
+        viewModel = createViewModel();
       });
     });
   });

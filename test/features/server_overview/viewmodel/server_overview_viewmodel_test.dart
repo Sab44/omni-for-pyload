@@ -1,10 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_proxy.dart';
 import 'package:omni_for_pyload/features/server_overview/viewmodel/server_overview_viewmodel.dart';
 import 'package:openapi_client/api.dart';
 
@@ -12,6 +17,7 @@ import 'dart:async';
 
 import 'package:fake_async/fake_async.dart';
 
+import '../../click_n_load/fake_click_n_load_platform.dart';
 import 'server_overview_viewmodel_test.mocks.dart';
 
 @GenerateMocks([IServerRepository, IPyLoadApiRepository])
@@ -19,15 +25,28 @@ void main() {
   group('ServerOverviewViewModel', () {
     late MockIServerRepository mockServerRepository;
     late MockIPyLoadApiRepository mockPyLoadApiRepository;
+    late FakeClickNLoadPlatform clickNLoadPlatform;
+    late ClickNLoadController clickNLoadController;
     late Server server;
     late ServerOverviewViewModel viewModel;
 
     setUp(() {
       mockServerRepository = MockIServerRepository();
       mockPyLoadApiRepository = MockIPyLoadApiRepository();
+      clickNLoadPlatform = FakeClickNLoadPlatform();
+      clickNLoadController = ClickNLoadController(
+        platform: clickNLoadPlatform,
+        serverRepository: mockServerRepository,
+        proxyFactory: (target) => ClickNLoadProxy(
+          target: target,
+          client: MockClient((_) async => http.Response('ok', 200)),
+          port: 0,
+        ),
+      );
       viewModel = ServerOverviewViewModel(
         serverRepository: mockServerRepository,
         pyLoadApiRepository: mockPyLoadApiRepository,
+        clickNLoadController: clickNLoadController,
       );
 
       server = Server(
@@ -39,8 +58,9 @@ void main() {
       );
     });
 
-    tearDown(() {
+    tearDown(() async {
       viewModel.dispose();
+      await clickNLoadController.stop();
     });
 
     test('loadServers retrieves and updates server list', () async {
@@ -203,6 +223,26 @@ void main() {
       // Expect at least 1, could be more due to status updates
       expect(listenerCount, greaterThanOrEqualTo(1));
       expect(viewModel.servers.length, equals(1));
+    });
+
+    test('removeServer stops Click\'N\'Load running for it', () async {
+      final configured = server.copyWith(
+        clickNLoad: () => const ClickNLoadServer(
+          ip: '192.168.1.5',
+          port: 9666,
+          protocol: 'http',
+          allowInsecureConnections: false,
+        ),
+      );
+      when(mockServerRepository.getServer(server.id))
+          .thenAnswer((_) async => configured);
+      when(mockServerRepository.removeServer(any)).thenAnswer((_) async {});
+      await clickNLoadController.start(server.id);
+
+      await viewModel.removeServer(configured);
+
+      expect(clickNLoadController.state, const ClickNLoadStopped());
+      expect(clickNLoadPlatform.isRunning, isFalse);
     });
 
     test('removeServer triggers notifyListeners', () async {

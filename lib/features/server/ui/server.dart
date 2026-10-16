@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/core/utils/format_utils.dart';
@@ -7,13 +5,13 @@ import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/app.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 import 'package:omni_for_pyload/features/click_n_load/ui/click_n_load_bottom_sheet.dart';
 import 'package:omni_for_pyload/features/server/ui/add_links_bottom_sheet.dart';
 import 'package:omni_for_pyload/features/server/ui/overview_tab.dart';
 import 'package:omni_for_pyload/features/server/ui/package_list_tab.dart';
 import 'package:omni_for_pyload/features/server/ui/upload_dlc_bottom_sheet.dart';
 import 'package:omni_for_pyload/features/server/viewmodel/server_viewmodel.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class ServerScreen extends StatefulWidget {
   final Server server;
@@ -46,6 +44,7 @@ class _ServerScreenState extends State<ServerScreen>
       server: widget.server,
       pyLoadApiRepository: getIt<IPyLoadApiRepository>(),
       serverRepository: getIt<IServerRepository>(),
+      clickNLoadController: getIt<ClickNLoadController>(),
     );
     _viewModel.addListener(_onViewModelChanged);
     // Start polling immediately since the first tab (Overview) is selected by default
@@ -104,6 +103,24 @@ class _ServerScreenState extends State<ServerScreen>
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// Start Click'N'Load and report the outcome
+  Future<void> _startClickNLoad() async {
+    final result = await _viewModel.startClickNLoad();
+    if (!mounted) return;
+    switch (result) {
+      case ClickNLoadStartResult.started:
+        _showSnackBar('Click\'n\'Load service started');
+      case ClickNLoadStartResult.alreadyRunning:
+        _showClickNLoadAlreadyRunningDialog();
+      case ClickNLoadStartResult.failed:
+        _showSnackBar('Failed to start Click\'n\'Load service');
+      case ClickNLoadStartResult.notConfigured:
+        _showAddClickNLoadBottomSheet();
+      case ClickNLoadStartResult.unsupported:
+        _showSnackBar('Click\'n\'Load is not supported on this device');
+    }
+  }
+
   void _showClickNLoadAlreadyRunningDialog() {
     showDialog(
       context: context,
@@ -155,41 +172,18 @@ class _ServerScreenState extends State<ServerScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (Platform.isAndroid)
+                  if (_viewModel.isClickNLoadSupported)
                     FloatingActionButton.extended(
                       heroTag: 'clicknload',
                       onPressed: () async {
-                        // Check if Click'N'Load is configured
-                        if (!_viewModel.hasClickNLoadConfigured) {
-                          setState(() => _isFabExpanded = false);
-                          _showAddClickNLoadBottomSheet();
-                          return;
-                        }
-
-                        await Permission.notification.request();
-                        final result = await _viewModel.startClickNLoad();
-                        if (mounted) {
-                          switch (result) {
-                            case ClickNLoadStartResult.started:
-                              _showSnackBar('Click\'n\'Load service started');
-                              break;
-                            case ClickNLoadStartResult.alreadyRunning:
-                              _showClickNLoadAlreadyRunningDialog();
-                              break;
-                            case ClickNLoadStartResult.failed:
-                              _showSnackBar(
-                                'Failed to start Click\'n\'Load service',
-                              );
-                              break;
-                            case ClickNLoadStartResult.notConfigured:
-                              // Should not happen as we check above, but handle it
-                              _showAddClickNLoadBottomSheet();
-                              break;
-                          }
-                          setState(() => _isFabExpanded = false);
-                        }
+                        setState(() => _isFabExpanded = false);
+                        await _startClickNLoad();
                       },
-                      label: const Text("Click'n'Load"),
+                      label: Text(
+                        _viewModel.isClickNLoadRunning
+                            ? "Click'n'Load (running)"
+                            : "Click'n'Load",
+                      ),
                       icon: const Icon(Icons.touch_app),
                     ),
                   const SizedBox(height: 10),
@@ -603,10 +597,7 @@ class _ServerScreenState extends State<ServerScreen>
     await Navigator.pushNamed(
       context,
       '/settings',
-      arguments: {
-        'server': _viewModel.server,
-        'onStopClickNLoad': _viewModel.stopClickNLoad,
-      },
+      arguments: {'server': _viewModel.server},
     );
     await _viewModel.reloadServer();
   }
@@ -630,24 +621,7 @@ class _ServerScreenState extends State<ServerScreen>
 
           if (success && mounted) {
             // Start the Click'N'Load service after configuration
-            await Permission.notification.request();
-            final result = await _viewModel.startClickNLoad();
-            if (mounted) {
-              switch (result) {
-                case ClickNLoadStartResult.started:
-                  _showSnackBar('Click\'n\'Load service started');
-                  break;
-                case ClickNLoadStartResult.alreadyRunning:
-                  _showClickNLoadAlreadyRunningDialog();
-                  break;
-                case ClickNLoadStartResult.failed:
-                  _showSnackBar('Failed to start Click\'n\'Load service');
-                  break;
-                case ClickNLoadStartResult.notConfigured:
-                  _showSnackBar('Error: Click\'n\'Load not configured');
-                  break;
-              }
-            }
+            await _startClickNLoad();
           } else if (!success && mounted) {
             _showSnackBar('Error: Failed to save Click\'n\'Load configuration');
           }

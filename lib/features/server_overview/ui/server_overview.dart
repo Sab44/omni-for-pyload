@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 import 'package:omni_for_pyload/features/server_overview/viewmodel/server_overview_viewmodel.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/features/app.dart';
@@ -27,6 +28,7 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
     _viewModel = ServerOverviewViewModel(
       serverRepository: getIt<IServerRepository>(),
       pyLoadApiRepository: getIt<IPyLoadApiRepository>(),
+      clickNLoadController: getIt<ClickNLoadController>(),
     );
     _viewModel.addListener(_onViewModelChanged);
     _loadServers();

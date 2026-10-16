@@ -5,6 +5,7 @@ import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/server_id.dart';
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 
 /// Outcome of a single status request
 enum _StatusCheck { online, offline, timedOut }
@@ -12,6 +13,7 @@ enum _StatusCheck { online, offline, timedOut }
 class ServerOverviewViewModel extends ChangeNotifier {
   final IServerRepository _serverRepository;
   final IPyLoadApiRepository _pyLoadApiRepository;
+  final ClickNLoadController _clickNLoadController;
   List<Server> _servers = [];
 
   /// Status per server
@@ -26,6 +28,7 @@ class ServerOverviewViewModel extends ChangeNotifier {
   ServerOverviewViewModel({
     required this._serverRepository,
     required this._pyLoadApiRepository,
+    required this._clickNLoadController,
   });
 
   List<Server> get servers => _servers;
@@ -112,8 +115,10 @@ class ServerOverviewViewModel extends ChangeNotifier {
     }
   }
 
-  /// Remove [server] from storage and the list
+  /// Remove [server] from storage and the list, stopping Click'N'Load if it
+  /// forwards for it
   Future<void> removeServer(Server server) async {
+    await _clickNLoadController.stopFor(server.id);
     await _serverRepository.removeServer(server.id);
     _servers.removeWhere((s) => s.id == server.id);
     _statuses.remove(server.id);

@@ -3,23 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi_client/api.dart';
-import 'package:omni_for_pyload/data/repositories/click_n_load_repository.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
-import 'package:omni_for_pyload/features/server/services/click_n_load_service.dart';
-
-/// Result of attempting to start Click'n'Load service
-enum ClickNLoadStartResult { started, alreadyRunning, failed, notConfigured }
+import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 
 class ServerViewModel extends ChangeNotifier {
   static final _log = Logger('ServerViewModel');
 
   final IPyLoadApiRepository _pyLoadApiRepository;
   final IServerRepository _serverRepository;
+  final ClickNLoadController _clickNLoadController;
   Server _server;
-  ClickNLoadService? _clickNLoadService;
   int _selectedTabIndex = 0;
   List<DownloadInfo> _downloads = [];
   List<PackageData> _queueData = [];
@@ -36,12 +32,19 @@ class ServerViewModel extends ChangeNotifier {
     required this._server,
     required this._pyLoadApiRepository,
     required this._serverRepository,
+    required this._clickNLoadController,
   }) {
+    _clickNLoadController.addListener(notifyListeners);
     _startPollingServerStatus();
   }
 
   Server get server => _server;
   bool get hasClickNLoadConfigured => _server.hasClickNLoad;
+  bool get isClickNLoadSupported => _clickNLoadController.isSupported;
+
+  /// Whether Click'N'Load currently forwards requests for this server
+  bool get isClickNLoadRunning =>
+      _clickNLoadController.isRunningFor(_server.id);
   int get selectedTabIndex => _selectedTabIndex;
   List<DownloadInfo> get downloads => _downloads;
   List<PackageData> get queueData => _queueData;
@@ -360,6 +363,9 @@ class ServerViewModel extends ChangeNotifier {
   /// - [protocol]: The protocol (http or https)
   /// - [allowInsecureConnections]: Whether to allow insecure HTTPS connections
   ///
+  /// If Click'N'Load is running for this server, it is restarted against
+  /// the new target.
+  ///
   /// Returns true if configuration was saved successfully, false otherwise
   Future<bool> configureClickNLoad({
     required String ip,
@@ -368,69 +374,38 @@ class ServerViewModel extends ChangeNotifier {
     required bool allowInsecureConnections,
   }) async {
     try {
-      final updated = _server.copyWith(
-        clickNLoad: () => ClickNLoadServer(
+      final updated = await _clickNLoadController.reconfigure(
+        _server.id,
+        ClickNLoadServer(
           ip: ip,
           port: port,
           protocol: protocol,
           allowInsecureConnections: allowInsecureConnections,
         ),
       );
-      await _serverRepository.updateServer(updated);
+      if (updated == null) return false;
       _server = updated;
 
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _log.warning(
+        'Could not save Click\'N\'Load configuration',
+        e,
+        stackTrace,
+      );
       return false;
     }
   }
 
-  /// Start the Click'n'Load service
-  /// Returns the result indicating if it was started, already running, not configured, or failed
+  /// Start Click'N'Load for the latest stored configuration of this server
   Future<ClickNLoadStartResult> startClickNLoad() async {
-    // (Re-)Initialize the Click'N'Load service in case server config was updated
-    await _initializeClickNLoadService();
-
-    if (_clickNLoadService == null) {
-      return ClickNLoadStartResult.notConfigured;
-    }
-
-    if (await _clickNLoadService!.isRunning()) {
-      return ClickNLoadStartResult.alreadyRunning;
-    }
-
-    final success = await _clickNLoadService!.start();
-    return success
-        ? ClickNLoadStartResult.started
-        : ClickNLoadStartResult.failed;
-  }
-
-  /// Initialize the Click'N'Load service from the latest stored configuration
-  Future<void> _initializeClickNLoadService() async {
     await reloadServer();
-    final clickNLoadServer = _server.clickNLoad;
-    if (clickNLoadServer == null) {
-      _clickNLoadService = null;
-    } else {
-      _log.info(
-        'Initializing Click\'N\'Load service with remote url '
-        '${clickNLoadServer.baseUrl}',
-      );
-      _clickNLoadService = ClickNLoadService(
-        repository: ClickNLoadRepository(clickNLoadServer),
-      );
-    }
+    return _clickNLoadController.start(_server.id);
   }
 
-  /// Stop the Click'n'Load service if it's running
-  Future<void> stopClickNLoad() async {
-    if (_clickNLoadService == null) return;
-
-    if (await _clickNLoadService!.isRunning()) {
-      await _clickNLoadService!.stop();
-    }
-  }
+  /// Stop Click'N'Load if it's running for this server
+  Future<void> stopClickNLoad() => _clickNLoadController.stopFor(_server.id);
 
   /// Upload a DLC container file to the server
   ///
@@ -542,6 +517,7 @@ class ServerViewModel extends ChangeNotifier {
   void dispose() {
     // Fire-and-forget, stop clickNLoad async from sync context
     stopClickNLoad();
+    _clickNLoadController.removeListener(notifyListeners);
     _isDisposed = true;
     _stopPolling();
     _serverStatusTimer?.cancel();
