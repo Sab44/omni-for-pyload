@@ -85,7 +85,6 @@ class ServerViewModel extends ChangeNotifier {
   void setSelectedTab(ServerTab tab) {
     if (_isDisposed) return;
     if (tab == _selectedTab) {
-      _tabPollers[tab]!.refresh();
       return;
     }
     clearSelection();

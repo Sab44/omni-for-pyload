@@ -127,10 +127,10 @@ void main() {
     });
 
     test('a failed fetch shows the failure message', () async {
-      when(mockPyLoadApiRepository.getDownloadStatus(server))
+      when(mockPyLoadApiRepository.getQueue(server))
           .thenThrow(const PyLoadApiUnauthorized());
 
-      viewModel.setSelectedTab(ServerTab.overview);
+      viewModel.setSelectedTab(ServerTab.queue);
       await Future.delayed(Duration.zero);
 
       expect(
