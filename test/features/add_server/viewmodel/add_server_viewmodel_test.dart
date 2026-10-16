@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.dart';
@@ -572,11 +573,11 @@ void main() {
 
       test('does not save when the connection test fails', () async {
         when(mockPyLoadApiRepository.getServerStatus(any))
-            .thenThrow(ApiException(401, 'Authentication failed'));
+            .thenThrow(const PyLoadApiUnauthorized());
 
         await expectLater(
           update(apiKey: 'wrong-key'),
-          throwsA(isA<ApiException>()),
+          throwsA(isA<PyLoadApiUnauthorized>()),
         );
         verifyNever(mockServerRepository.replaceServer(any, any));
       });
@@ -664,11 +665,11 @@ void main() {
             ),
           ).thenAnswer((_) async => false);
           when(mockPyLoadApiRepository.getServerStatus(any))
-              .thenThrow(ApiException(401, 'Unauthorized'));
+              .thenThrow(const PyLoadApiUnauthorized());
 
           await expectLater(
             viewModel.addServerFromQrCode(qrCode),
-            throwsA(isA<ApiException>()),
+            throwsA(isA<PyLoadApiUnauthorized>()),
           );
           verifyNever(mockServerRepository.addServer(any));
         },

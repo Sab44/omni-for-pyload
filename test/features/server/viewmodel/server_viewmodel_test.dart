@@ -4,6 +4,7 @@ import 'package:http/testing.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
@@ -55,6 +56,13 @@ void main() {
         allowInsecure: false,
         name: 'Test Server',
       );
+
+      // Polled tab contents, empty unless a test stubs them
+      when(mockPyLoadApiRepository.getDownloadStatus(any))
+          .thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getQueue(any)).thenAnswer((_) async => []);
+      when(mockPyLoadApiRepository.getCollector(any))
+          .thenAnswer((_) async => []);
 
       // Mock initial server status call which happens in constructor
       when(mockPyLoadApiRepository.getServerStatus(server)).thenAnswer(
@@ -113,6 +121,19 @@ void main() {
       viewModel.setSelectedTab(2);
       expect(viewModel.selectedTabIndex, 2);
       verify(mockPyLoadApiRepository.getCollector(server)).called(1);
+    });
+
+    test('a failed fetch shows the failure message', () async {
+      when(mockPyLoadApiRepository.getDownloadStatus(server))
+          .thenThrow(const PyLoadApiUnauthorized());
+
+      viewModel.setSelectedTab(0);
+      await Future.delayed(Duration.zero);
+
+      expect(
+        viewModel.error,
+        'Authentication failed. Please check your API key.',
+      );
     });
 
     test('toggleSelection adds and removes package ids', () {
@@ -425,7 +446,7 @@ void main() {
         when(mockServerRepository.getServer(server.id))
             .thenAnswer((_) async => stored);
         when(mockPyLoadApiRepository.getServerStatus(stored))
-            .thenAnswer((_) async => throw Exception('offline'));
+            .thenThrow(const PyLoadApiUnreachable());
         var notified = false;
         viewModel.addListener(() => notified = true);
 
@@ -497,7 +518,7 @@ void main() {
         when(mockServerRepository.getServer(server.id))
             .thenAnswer((_) async => configured);
         when(mockPyLoadApiRepository.getServerStatus(configured))
-            .thenAnswer((_) async => throw Exception('offline'));
+            .thenThrow(const PyLoadApiUnreachable());
       });
 
       test('starting uses the stored configuration', () async {

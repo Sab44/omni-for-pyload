@@ -137,24 +137,6 @@ class MockIPyLoadApiRepository extends _i1.Mock
       ) as _i4.Future<List<_i2.DownloadInfo>>);
 
   @override
-  _i4.Future<List<_i2.PackageData>> getQueueData(_i5.Server? server) =>
-      (super.noSuchMethod(
-        Invocation.method(#getQueueData, [server]),
-        returnValue: _i4.Future<List<_i2.PackageData>>.value(
-          <_i2.PackageData>[],
-        ),
-      ) as _i4.Future<List<_i2.PackageData>>);
-
-  @override
-  _i4.Future<List<_i2.PackageData>> getCollectorData(_i5.Server? server) =>
-      (super.noSuchMethod(
-        Invocation.method(#getCollectorData, [server]),
-        returnValue: _i4.Future<List<_i2.PackageData>>.value(
-          <_i2.PackageData>[],
-        ),
-      ) as _i4.Future<List<_i2.PackageData>>);
-
-  @override
   _i4.Future<List<_i2.PackageData>> getQueue(_i5.Server? server) =>
       (super.noSuchMethod(
         Invocation.method(#getQueue, [server]),

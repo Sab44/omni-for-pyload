@@ -71,7 +71,6 @@ Recommended: install via [Obtainium](https://github.com/ImranR98/Obtainium)
 
 Alternatively, install the APK from the releases section manually.
 
-
 ### iOS
 
 Recommended: install via [AltStore](https://altstore.io) or [SideStore](https://sidestore.io/)  
@@ -101,10 +100,8 @@ Make sure to copy the API key when it is shown as you will not be able to view i
 
 * No support for captcha solving
 
-
 ## Roadmap
 
-* Improve error handling
 * Support managing pyLoad server settings from the app
 * Show estimated time left for downloads
 * Allow receiving URLs via the share action

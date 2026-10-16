@@ -4,6 +4,7 @@ import 'package:http/testing.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
@@ -33,6 +34,9 @@ void main() {
     setUp(() {
       mockServerRepository = MockIServerRepository();
       mockPyLoadApiRepository = MockIPyLoadApiRepository();
+      // Servers are offline unless a test stubs a status
+      when(mockPyLoadApiRepository.getServerStatus(any))
+          .thenThrow(const PyLoadApiUnreachable());
       clickNLoadPlatform = FakeClickNLoadPlatform();
       clickNLoadController = ClickNLoadController(
         platform: clickNLoadPlatform,
@@ -157,7 +161,8 @@ void main() {
       fakeAsync((async) {
         when(mockServerRepository.getAllServers())
             .thenAnswer((_) async => [server]);
-        when(mockPyLoadApiRepository.getServerStatus(any)).thenThrow('Error');
+        when(mockPyLoadApiRepository.getServerStatus(any))
+            .thenThrow(const PyLoadApiUnreachable());
 
         viewModel.loadServers();
         async.flushMicrotasks();
@@ -184,7 +189,7 @@ void main() {
         when(mockPyLoadApiRepository.getServerStatus(any))
             .thenAnswer((_) async {
               await Future.delayed(const Duration(seconds: 2));
-              throw TimeoutException('Connection timeout');
+              throw const PyLoadApiTimeout();
             });
 
         viewModel.loadServers();
@@ -308,7 +313,7 @@ void main() {
         when(mockServerRepository.getAllServers())
             .thenAnswer((_) async => stored);
         when(mockPyLoadApiRepository.getServerStatus(server))
-            .thenThrow(Exception('offline'));
+            .thenThrow(const PyLoadApiUnreachable());
         when(mockPyLoadApiRepository.getServerStatus(edited))
             .thenAnswer((_) => pending.future);
 
@@ -335,7 +340,7 @@ void main() {
         when(mockServerRepository.getAllServers())
             .thenAnswer((_) async => [server.copyWith()]);
         when(mockPyLoadApiRepository.getServerStatus(any))
-            .thenThrow(Exception('offline'));
+            .thenThrow(const PyLoadApiUnreachable());
 
         viewModel.loadServers();
         async.flushMicrotasks();

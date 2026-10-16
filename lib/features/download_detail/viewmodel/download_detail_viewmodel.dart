@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openapi_client/api.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 
@@ -36,8 +37,8 @@ class DownloadDetailViewModel extends ChangeNotifier {
         packageId,
       );
       _error = null;
-    } catch (e) {
-      _error = e.toString();
+    } on PyLoadApiFailure catch (e) {
+      _error = e.message;
     } finally {
       _isLoading = false;
       notifyListeners();

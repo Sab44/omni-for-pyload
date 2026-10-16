@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi_client/api.dart';
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
@@ -90,8 +91,8 @@ class ServerViewModel extends ChangeNotifier {
     try {
       _downloads = await _pyLoadApiRepository.getDownloadStatus(server);
       _error = null;
-    } catch (e) {
-      _error = e.toString();
+    } on PyLoadApiFailure catch (e) {
+      _error = e.message;
     } finally {
       notifyListeners();
     }
@@ -103,8 +104,8 @@ class ServerViewModel extends ChangeNotifier {
       List<PackageData> queue = await _pyLoadApiRepository.getQueue(server);
       _queueData = queue.reversed.toList();
       _error = null;
-    } catch (e) {
-      _error = e.toString();
+    } on PyLoadApiFailure catch (e) {
+      _error = e.message;
     } finally {
       notifyListeners();
     }
@@ -118,8 +119,8 @@ class ServerViewModel extends ChangeNotifier {
       );
       _collectorData = collector.reversed.toList();
       _error = null;
-    } catch (e) {
-      _error = e.toString();
+    } on PyLoadApiFailure catch (e) {
+      _error = e.message;
     } finally {
       notifyListeners();
     }
@@ -144,7 +145,7 @@ class ServerViewModel extends ChangeNotifier {
     try {
       _serverStatus = await _pyLoadApiRepository.getServerStatus(server);
       notifyListeners();
-    } catch (e) {
+    } on PyLoadApiFailure {
       // Ignore errors during polling
     }
   }

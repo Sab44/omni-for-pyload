@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
@@ -108,9 +109,9 @@ class ServerOverviewViewModel extends ChangeNotifier {
     try {
       await _pyLoadApiRepository.getServerStatus(server);
       return _StatusCheck.online;
-    } on TimeoutException {
+    } on PyLoadApiTimeout {
       return _StatusCheck.timedOut;
-    } catch (_) {
+    } on PyLoadApiFailure {
       return _StatusCheck.offline;
     }
   }

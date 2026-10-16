@@ -1,72 +1,49 @@
 import 'package:openapi_client/api.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 
 enum Result { success, partial, failure }
 
 /// Interface for PyLoad API interactions
+///
+/// Every method fails only with a [PyLoadApiFailure]; show its
+/// [PyLoadApiFailure.message] to the user. Bulk actions report failed
+/// packages through their [Result] instead.
 abstract class IPyLoadApiRepository {
   /// Get the server status
   ///
   /// Returns a ServerStatus object with current server information.
-  ///
-  /// Throws: String with user-friendly error message on failure
   Future<ServerStatus> getServerStatus(Server server);
 
   /// Get the status of all currently running downloads
   ///
   /// Returns a list of DownloadInfo objects representing the current downloads.
   /// Returns an empty list if no downloads are active.
-  ///
-  /// Throws: String with user-friendly error message on failure
   Future<List<DownloadInfo>> getDownloadStatus(Server server);
-
-  /// Get the queue data of all packages
-  ///
-  /// Returns a list of PackageData objects representing the packages in the queue.
-  /// Returns an empty list if no packages are queued.
-  ///
-  /// Throws: String with user-friendly error message on failure
-  Future<List<PackageData>> getQueueData(Server server);
-
-  /// Get the collector data of all packages
-  ///
-  /// Returns a list of PackageData objects representing the packages in the collector.
-  /// Returns an empty list if no packages are in the collector.
-  ///
-  /// Throws: String with user-friendly error message on failure
-  Future<List<PackageData>> getCollectorData(Server server);
 
   /// Get the queue packages (without file details)
   ///
   /// Returns a list of PackageData objects representing the packages in the queue.
   /// Does not include file details - use getPackageData for full details.
-  ///
-  /// Throws: String with user-friendly error message on failure
   Future<List<PackageData>> getQueue(Server server);
 
   /// Get the collector packages (without file details)
   ///
   /// Returns a list of PackageData objects representing the packages in the collector.
   /// Does not include file details - use getPackageData for full details.
-  ///
-  /// Throws: String with user-friendly error message on failure
   Future<List<PackageData>> getCollector(Server server);
 
   /// Get complete information about a package, including files
   ///
   /// Returns PackageData with complete information including all files.
-  ///
-  /// Throws: String with user-friendly error message on failure
   Future<PackageData> getPackageData(Server server, int packageId);
 
   /// Deletes packages by their IDs
-  ///
-  /// Throws: String with user-friendly error message on failure
   Future<void> deletePackages(Server server, List<int> packageIds);
 
   /// Restarts packages by their IDs
   ///
-  /// Returns a RestartResult indicating success, partial success, or failure.
+  /// Returns whether all, some or none of the packages were restarted.
   Future<Result> restartPackages(Server server, List<int> packageIds);
 
   /// Moves packages to a different destination (Queue or Collector)
@@ -100,8 +77,6 @@ abstract class IPyLoadApiRepository {
   /// - [server]: The server configuration
   /// - [fileName]: The name of the file (extension is important for decryption)
   /// - [fileBytes]: The file content as bytes
-  ///
-  /// Throws: String with user-friendly error message on failure
   Future<void> uploadContainer(
     Server server,
     String fileName,
@@ -118,7 +93,6 @@ abstract class IPyLoadApiRepository {
   /// - [destination]: Where to add the package (Queue or Collector)
   ///
   /// Returns the package ID of the created package
-  /// Throws: String with user-friendly error message on failure
   Future<int> addPackage(
     Server server,
     String name,

@@ -1,92 +1,92 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:omni_for_pyload/core/utils/http_client_factory.dart';
 import 'package:openapi_client/api.dart';
+import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 
 class PyLoadApiRepository implements IPyLoadApiRepository {
-  static const Duration _connectionTimeout = Duration(seconds: 2);
+  static final _log = Logger('PyLoadApiRepository');
+  static const Duration _defaultTimeout = Duration(seconds: 2);
 
-  Server? _currentServer;
-  PyLoadRESTApi? _cachedApi;
+  final http.Client Function(bool allowInsecure) _createClient;
+  final Duration _timeout;
 
-  /// Configures and returns a PyLoadRESTApi instance with proper authentication
+  /// Open connection per server
+  final Map<ServerId, _Connection> _connections = {};
+
+  /// [createClient] builds the HTTP client for a connection, [timeout] limits
+  /// every request
+  PyLoadApiRepository({
+    this._createClient = HttpClientFactory.createClient,
+    this._timeout = _defaultTimeout,
+  });
+
+  /// Returns the API for [server], reusing its connection while the
+  /// connection parameters stay the same
   ///
-  /// Uses caching for the same server configuration.
-  /// Creates a new instance if the server configuration changes.
-  ///
-  /// Parameters:
-  /// - [server]: The server configuration with IP, port and API key
-  ///
-  /// Returns a configured PyLoadRESTApi instance
+  /// If they changed, the previous connection is closed once its running
+  /// requests finished.
   PyLoadRESTApi _configureApi(Server server) {
-    // Return cached API if the server hasn't changed
-    if (_currentServer?.areMainConnectionParametersEqualTo(server) == true &&
-        _cachedApi != null) {
-      return _cachedApi!;
+    final existing = _connections[server.id];
+    if (existing != null &&
+        existing.server.areMainConnectionParametersEqualTo(server)) {
+      return existing.api;
     }
 
-    _currentServer = server;
-
-    // Create API client with the server configuration and authentication
-    final basePath = '${server.protocol}://${server.ip}:${server.port}';
-    final apiKeyAuth = ApiKeyAuth('header', 'X-API-Key');
-    apiKeyAuth.apiKey = server.apiKey;
-    final apiClient = ApiClient(basePath: basePath, authentication: apiKeyAuth);
-
-    // Inject custom client without certificate validation if user configured
-    if (server.allowInsecure) {
-      apiClient.client = HttpClientFactory.createClient(true);
-    }
-
-    // Create API instance with the configured client
-    _cachedApi = PyLoadRESTApi(apiClient);
-
-    return _cachedApi!;
+    existing?.client.retire();
+    final connection = _Connection.open(
+      server,
+      _RetirableClient(_createClient(server.allowInsecure)),
+    );
+    _connections[server.id] = connection;
+    return connection.api;
   }
 
-  /// Executes a network request with timeout and error handling
-  ///
-  /// Wraps any Future-returning API call with:
-  /// - Timeout handling
-  /// - API exception handling with user-friendly error messages
-  /// - Generic error handling that converts unknown errors to ApiException
-  ///
-  /// Parameters:
-  /// - [request]: A Future that represents the API call
-  /// - [timeout]: Optional custom timeout duration
-  ///
-  /// Throws:
-  /// - [TimeoutException]: When the request exceeds the timeout duration
-  /// - [ApiException]: For API errors or unknown errors with user-friendly messages
-  Future<T> executeNetworkRequest<T>(
-    Future<T> Function() request, {
-    Duration timeout = _connectionTimeout,
-  }) async {
+  /// Runs [request] with the request timeout and maps every error to a
+  /// [PyLoadApiFailure]
+  Future<T> _execute<T>(Future<T> Function() request) async {
     try {
-      return await request().timeout(
-        timeout,
-        onTimeout: () => throw TimeoutException('Connection timeout'),
-      );
-    } on TimeoutException {
-      rethrow;
-    } on ApiException catch (e) {
-      if (e.code == 401) {
-        throw ApiException(
-          401,
-          'Authentication failed. Please check your API key.',
-        );
-      } else if (e.code >= 500) {
-        throw ApiException(e.code, 'Server error: ${e.message}');
+      return await request().timeout(_timeout);
+    } catch (e, stackTrace) {
+      final failure = _toFailure(e);
+      if (failure is PyLoadApiBadResponse) {
+        // Also covers errors of the client itself, which would be hidden
+        // behind the failure otherwise
+        _log.warning('Unexpected response', e, stackTrace);
       } else {
-        throw ApiException(e.code, 'Server connection failed: ${e.message}');
+        _log.fine('Request failed: $failure', e, stackTrace);
       }
-    } catch (e) {
-      throw ApiException(500, 'Unknown error occurred: $e');
+      throw failure;
     }
   }
+
+  /// Returns [body], failing with [PyLoadApiBadResponse] if it is missing
+  static T _requireBody<T>(T? body) {
+    if (body == null) {
+      _log.fine('Response body missing, expected $T');
+      throw const PyLoadApiBadResponse();
+    }
+    return body;
+  }
+
+  static PyLoadApiFailure _toFailure(Object error) => switch (error) {
+    TimeoutException() => const PyLoadApiTimeout(),
+    // The client wraps connection problems in an ApiException
+    ApiException(innerException: IOException() || http.ClientException()) =>
+      const PyLoadApiUnreachable(),
+    // Thrown by the client itself if the body does not match the expected type
+    ApiException(:final message?) when message.contains('deserialization') =>
+      const PyLoadApiBadResponse(),
+    ApiException(code: 401) => const PyLoadApiUnauthorized(),
+    ApiException(:final code) => PyLoadApiServerError(code),
+    _ => const PyLoadApiBadResponse(),
+  };
 
   /// Get the server status
   ///
@@ -94,11 +94,8 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
   @override
   Future<ServerStatus> getServerStatus(Server server) async {
     final api = _configureApi(server);
-    final status = await executeNetworkRequest(() => api.apiStatusServerGet());
-    if (status == null) {
-      throw 'Failed to get server status';
-    }
-    return status;
+    final status = await _execute(() => api.apiStatusServerGet());
+    return _requireBody(status);
   }
 
   /// Get the status of all currently running downloads
@@ -108,36 +105,8 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
   @override
   Future<List<DownloadInfo>> getDownloadStatus(Server server) async {
     final api = _configureApi(server);
-    final downloadInfoList = await executeNetworkRequest(
-      () => api.apiStatusDownloadsGet(),
-    );
+    final downloadInfoList = await _execute(() => api.apiStatusDownloadsGet());
     return downloadInfoList ?? [];
-  }
-
-  /// Get the queue data of all packages
-  ///
-  /// Returns a list of PackageData objects representing the packages in the queue.
-  /// Returns an empty list if no packages are queued.
-  @override
-  Future<List<PackageData>> getQueueData(Server server) async {
-    final api = _configureApi(server);
-    final queueDataList = await executeNetworkRequest(
-      () => api.apiGetQueueDataGet(),
-    );
-    return queueDataList ?? [];
-  }
-
-  /// Get the collector data of all packages
-  ///
-  /// Returns a list of PackageData objects representing the packages in the collector.
-  /// Returns an empty list if no packages are in the collector.
-  @override
-  Future<List<PackageData>> getCollectorData(Server server) async {
-    final api = _configureApi(server);
-    final collectorDataList = await executeNetworkRequest(
-      () => api.apiGetCollectorDataGet(),
-    );
-    return collectorDataList ?? [];
   }
 
   /// Get the queue packages (without file details)
@@ -147,7 +116,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
   @override
   Future<List<PackageData>> getQueue(Server server) async {
     final api = _configureApi(server);
-    final queueList = await executeNetworkRequest(() => api.apiGetQueueGet());
+    final queueList = await _execute(() => api.apiGetQueueGet());
     return queueList ?? [];
   }
 
@@ -158,9 +127,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
   @override
   Future<List<PackageData>> getCollector(Server server) async {
     final api = _configureApi(server);
-    final collectorList = await executeNetworkRequest(
-      () => api.apiGetCollectorGet(),
-    );
+    final collectorList = await _execute(() => api.apiGetCollectorGet());
     return collectorList ?? [];
   }
 
@@ -170,20 +137,17 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
   @override
   Future<PackageData> getPackageData(Server server, int packageId) async {
     final api = _configureApi(server);
-    final packageData = await executeNetworkRequest(
+    final packageData = await _execute(
       () => api.apiGetPackageDataGet(packageId),
     );
-    if (packageData == null) {
-      throw 'Package data not found for package ID: $packageId';
-    }
-    return packageData;
+    return _requireBody(packageData);
   }
 
   /// Deletes packages by their IDs
   @override
   Future<void> deletePackages(Server server, List<int> packageIds) async {
     final api = _configureApi(server);
-    await executeNetworkRequest(
+    await _execute(
       () => api.apiDeletePackagesPost(
         apiDeletePackagesPostRequest: ApiDeletePackagesPostRequest(
           packageIds: packageIds,
@@ -194,28 +158,9 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
 
   /// Restarts packages by their IDs
   @override
-  Future<Result> restartPackages(Server server, List<int> packageIds) async {
+  Future<Result> restartPackages(Server server, List<int> packageIds) {
     final api = _configureApi(server);
-    int successCount = 0;
-
-    await Future.wait(
-      packageIds.map((id) async {
-        try {
-          await executeNetworkRequest(() => api.apiRestartPackagePost(id));
-          successCount++;
-        } catch (e) {
-          // Ignore individual failures but track success count
-        }
-      }),
-    );
-
-    if (successCount == packageIds.length) {
-      return Result.success;
-    } else if (successCount > 0) {
-      return Result.partial;
-    } else {
-      return Result.failure;
-    }
+    return _forEachPackage(packageIds, api.apiRestartPackagePost);
   }
 
   /// Moves packages to a different destination
@@ -224,83 +169,89 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
     Server server,
     List<int> packageIds,
     Destination destination,
-  ) async {
+  ) {
     final api = _configureApi(server);
-    int successCount = 0;
-
-    await Future.wait(
-      packageIds.map((id) async {
-        try {
-          await executeNetworkRequest(
-            () => api.apiMovePackagePost(destination, id),
-          );
-          successCount++;
-        } catch (e) {
-          // Ignore individual failures but track success count
-        }
-      }),
+    return _forEachPackage(
+      packageIds,
+      (id) => api.apiMovePackagePost(destination, id),
     );
-
-    if (successCount == packageIds.length) {
-      return Result.success;
-    } else if (successCount > 0) {
-      return Result.partial;
-    } else {
-      return Result.failure;
-    }
   }
 
   /// Triggers archive extraction for given packages
+  ///
+  /// Extraction is requested per package, so failures can be reported per
+  /// package.
   @override
-  Future<Result> extractPackages(Server server, List<int> packageIds) async {
+  Future<Result> extractPackages(Server server, List<int> packageIds) {
     final api = _configureApi(server);
-
-    await executeNetworkRequest(
-      () => api.apiServiceCallPost(
+    return _forEachPackage(
+      packageIds,
+      (id) => api.apiServiceCallPost(
         apiServiceCallPostRequest: ApiServiceCallPostRequest(
           serviceName: "ExtractArchive.extract_package",
-          arguments: packageIds,
+          arguments: [id],
           parseArguments: false,
         ),
       ),
     );
+  }
 
-    return Result.success;
+  /// Runs [action] for every package in parallel and reports how many succeeded
+  Future<Result> _forEachPackage(
+    List<int> packageIds,
+    Future<void> Function(int packageId) action,
+  ) async {
+    var successCount = 0;
+
+    await Future.wait(
+      packageIds.map((id) async {
+        try {
+          await _execute(() => action(id));
+          successCount++;
+        } on PyLoadApiFailure {
+          // Counted as not successful, already logged
+        }
+      }),
+    );
+
+    if (successCount == packageIds.length) return Result.success;
+    if (successCount > 0) return Result.partial;
+    return Result.failure;
   }
 
   /// Pause the PyLoad server
   @override
   Future<void> pauseServer(Server server) async {
     final api = _configureApi(server);
-    await executeNetworkRequest(() => api.apiPauseServerPost());
+    await _execute(() => api.apiPauseServerPost());
   }
 
   /// Unpause the PyLoad server
   @override
   Future<void> unpauseServer(Server server) async {
     final api = _configureApi(server);
-    await executeNetworkRequest(() => api.apiUnpauseServerPost());
+    await _execute(() => api.apiUnpauseServerPost());
   }
 
   /// Stop all running downloads on the server
   @override
   Future<void> stopAllDownloads(Server server) async {
     final api = _configureApi(server);
-    await executeNetworkRequest(() => api.apiStopAllDownloadsPost());
+    await _execute(() => api.apiStopAllDownloadsPost());
   }
 
   /// Delete all finished downloads on the server
   @override
   Future<void> deleteFinished(Server server) async {
     final api = _configureApi(server);
-    await executeNetworkRequest(() => api.apiDeleteFinishedPost());
+    await _execute(() => api.apiDeleteFinishedPost());
   }
 
   /// Restart all failed downloads on the server
   @override
   Future<void> restartFailed(Server server) async {
     final api = _configureApi(server);
-    await executeNetworkRequest(() => api.apiRestartFailedPost());
+    await _execute(() => api.apiRestartFailedPost());
   }
 
   /// Uploads a container file (.dlc) to the server
@@ -317,7 +268,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
       fileBytes,
       filename: fileName,
     );
-    await executeNetworkRequest(
+    await _execute(
       () => api.apiUploadContainerPost(
         fileName,
         multipartFile,
@@ -335,7 +286,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
     Destination destination,
   ) async {
     final api = _configureApi(server);
-    final packageId = await executeNetworkRequest(
+    final packageId = await _execute(
       () => api.apiAddPackagePost(
         apiAddPackagePostRequest: ApiAddPackagePostRequest(
           name: name,
@@ -344,10 +295,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
         ),
       ),
     );
-    if (packageId == null) {
-      throw 'Failed to create package: No package ID returned';
-    }
-    return packageId;
+    return _requireBody(packageId);
   }
 
   /// Sets or updates the password for a specific package
@@ -358,7 +306,7 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
     String password,
   ) async {
     final api = _configureApi(server);
-    await executeNetworkRequest(
+    await _execute(
       () => api.apiSetPackageDataPost(
         apiSetPackageDataPostRequest: ApiSetPackageDataPostRequest(
           packageId: packageId,
@@ -366,5 +314,83 @@ class PyLoadApiRepository implements IPyLoadApiRepository {
         ),
       ),
     );
+  }
+}
+
+/// The API of one server, bound to the parameters it was opened with
+class _Connection {
+  final Server server;
+  final _RetirableClient client;
+  final PyLoadRESTApi api;
+
+  _Connection._(this.server, this.client, this.api);
+
+  factory _Connection.open(Server server, _RetirableClient client) {
+    final apiKeyAuth = ApiKeyAuth('header', 'X-API-Key')
+      ..apiKey = server.apiKey;
+    final apiClient = ApiClient(
+      basePath: server.baseUrl,
+      authentication: apiKeyAuth,
+    )..client = client;
+    return _Connection._(server, client, PyLoadRESTApi(apiClient));
+  }
+}
+
+/// Delegates to [_inner] and closes it once retired and no request is running
+///
+/// Closing an `IOClient` right away would abort requests that are still
+/// running on the replaced connection.
+class _RetirableClient extends http.BaseClient {
+  final http.Client _inner;
+  int _runningRequests = 0;
+  bool _isRetired = false;
+
+  _RetirableClient(this._inner);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    _runningRequests++;
+    try {
+      final response = await _inner.send(request);
+      // The request runs until its body was read
+      final body = StreamController<List<int>>();
+      response.stream.listen(
+        body.add,
+        onError: body.addError,
+        onDone: () {
+          body.close();
+          _finishRequest();
+        },
+        cancelOnError: false,
+      );
+      return http.StreamedResponse(
+        body.stream,
+        response.statusCode,
+        contentLength: response.contentLength,
+        request: response.request,
+        headers: response.headers,
+        isRedirect: response.isRedirect,
+        persistentConnection: response.persistentConnection,
+        reasonPhrase: response.reasonPhrase,
+      );
+    } catch (_) {
+      _finishRequest();
+      rethrow;
+    }
+  }
+
+  /// Closes the client as soon as no request is running anymore
+  void retire() {
+    _isRetired = true;
+    _closeIfIdle();
+  }
+
+  void _finishRequest() {
+    _runningRequests--;
+    _closeIfIdle();
+  }
+
+  void _closeIfIdle() {
+    if (_isRetired && _runningRequests == 0) _inner.close();
   }
 }
