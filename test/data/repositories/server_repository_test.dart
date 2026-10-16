@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:omni_for_pyload/data/repositories/server_repository.dart';
+import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -43,7 +45,7 @@ void main() {
       await repository.addServer(server('b'));
       await repository.updateServer(server('a').copyWith(name: 'A'));
       await repository.addServer(server('c'));
-      await repository.removeServer('c', 8000);
+      await repository.removeServer(const ServerId('c', 8000));
 
       for (final json in await storedServers()) {
         expect((json as Map<String, dynamic>)['apiKey'], isEmpty);
@@ -77,7 +79,7 @@ void main() {
       await repository.addServer(server('c'));
 
       final updated = server('b').copyWith(name: 'Renamed', apiKey: 'new');
-      await repository.replaceServer(server('b'), updated);
+      await repository.replaceServer(server('b').id, updated);
 
       final servers = await repository.getAllServers();
       expect(servers.map((s) => s.ip), ['a', 'b', 'c']);
@@ -88,7 +90,7 @@ void main() {
       await repository.addServer(server('a'));
 
       final updated = server('a2', port: 9000).copyWith(apiKey: 'moved');
-      await repository.replaceServer(server('a'), updated);
+      await repository.replaceServer(server('a').id, updated);
 
       expect(await storedApiKey('a2', 9000), 'moved');
       expect(await storedApiKey('a', 8000), isNull);
@@ -99,7 +101,7 @@ void main() {
       await repository.addServer(server('a'));
 
       await repository.replaceServer(
-        server('a'),
+        server('a').id,
         server('a').copyWith(apiKey: 'rotated'),
       );
 
@@ -108,9 +110,48 @@ void main() {
 
     test('throws if the original server does not exist', () async {
       await expectLater(
-        repository.replaceServer(server('missing'), server('other')),
+        repository.replaceServer(server('missing').id, server('other')),
         throwsStateError,
       );
+    });
+  });
+
+  group('getServer', () {
+    test('returns the server with the given id', () async {
+      await repository.addServer(server('a'));
+      await repository.addServer(server('b'));
+
+      expect(
+        await repository.getServer(const ServerId('b', 8000)),
+        server('b'),
+      );
+    });
+
+    test('returns null if no server has the given id', () async {
+      await repository.addServer(server('a'));
+
+      expect(await repository.getServer(const ServerId('a', 9000)), isNull);
+    });
+  });
+
+  group('updateServer', () {
+    test('persists a cleared Click\'N\'Load configuration', () async {
+      const clickNLoad = ClickNLoadServer(
+        ip: 'a',
+        port: 9666,
+        protocol: 'http',
+        allowInsecureConnections: false,
+      );
+      await repository.addServer(
+        server('a').copyWith(clickNLoad: () => clickNLoad),
+      );
+
+      final stored = await repository.getServer(server('a').id);
+      expect(stored!.clickNLoad, clickNLoad);
+
+      await repository.updateServer(stored.copyWith(clickNLoad: () => null));
+
+      expect((await repository.getServer(server('a').id))!.clickNLoad, isNull);
     });
   });
 }

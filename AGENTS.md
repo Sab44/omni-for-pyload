@@ -19,7 +19,7 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 |---|---|
 | `lib/main.dart` | Entry: sets up DI, loads `AppSettings`, runs `App` |
 | `lib/core/` | `service_locator.dart` (get_it), `logging.dart` (root logger setup), `utils/` (`HttpClientFactory`, formatting) |
-| `lib/domain/models/` | Plain Dart models: `Server`, `ClickNLoadServer`, `AppSettings` (manual `toJson`/`fromJson`/`copyWith`) |
+| `lib/domain/models/` | Plain immutable Dart models: `Server`, `ServerId`, `ClickNLoadServer`, `AppSettings` (manual `toJson`/`fromJson`/`copyWith`) |
 | `lib/domain/repositories/` | Repository interfaces (`I*Repository`) |
 | `lib/data/repositories/` | Implementations of the interfaces |
 | `lib/features/app.dart` | `MaterialApp`, light/dark themes, routes, global `themeNotifier` and `routeObserver` |
@@ -56,8 +56,8 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 
 | Concern | Implementation |
 |---|---|
-| Server list | `shared_preferences` key `servers` (JSON), written only via `_saveServers`, which strips API keys. Editing uses `replaceServer(original, updated)`: keeps list position, moves the API key if IP/port changed |
-| API keys | `flutter_secure_storage`, key `server_credentials:<ip>:<port>`. Servers are identified by `ip` + `port` |
+| Server list | `shared_preferences` key `servers` (JSON), written only via `_saveServers`, which strips API keys. Editing uses `replaceServer(originalId, updated)`: keeps list position, moves the API key if IP/port changed. The repository is the source of truth: screens re-read via `getServer(id)` after changes instead of sharing `Server` instances |
+| API keys | `flutter_secure_storage`, key `server_credentials:<ip>:<port>`. Servers are identified by `ServerId` (`ip` + `port`, `Server.id`); use it for every "same server?" check |
 | App settings | `shared_preferences` key `app_settings` (JSON) |
 | pyLoad API | `PyLoadApiRepository` wraps `PyLoadRESTApi`; auth header `X-API-Key`; base URL `<protocol>://<ip>:<port>`; API instance cached per server connection params |
 | Errors | `executeNetworkRequest` applies a 2 s timeout and maps errors to `ApiException` with user-facing messages (401 → auth message). Bulk actions return `Result { success, partial, failure }` |

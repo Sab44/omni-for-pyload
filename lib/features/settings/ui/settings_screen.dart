@@ -177,7 +177,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (server == null) return const SizedBox.shrink();
 
     final hasClickNLoad = server.hasClickNLoad;
-    final clickNLoadServer = server.clickNLoadServer;
+    final clickNLoadServer = server.clickNLoad;
 
     return Card(
       child: ListTile(
@@ -185,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Text("Click'N'Load"),
         subtitle: hasClickNLoad && clickNLoadServer != null
             ? Text(
-                '${clickNLoadServer.protocol}://${clickNLoadServer.ip}:${clickNLoadServer.port}',
+                clickNLoadServer.baseUrl,
                 style: Theme.of(context).textTheme.bodySmall,
               )
             : const Text(
@@ -244,7 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showEditClickNLoadBottomSheet() {
     final server = _viewModel.server;
-    final clickNLoadServer = server?.clickNLoadServer;
+    final clickNLoadServer = server?.clickNLoad;
     if (server == null || clickNLoadServer == null) return;
 
     showModalBottomSheet(

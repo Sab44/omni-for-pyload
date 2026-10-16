@@ -1,79 +1,37 @@
 import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
+import 'package:omni_for_pyload/domain/models/server_id.dart';
 
 class Server {
-  late String ip;
+  final String ip;
 
-  late int port;
+  final int port;
 
-  late String apiKey;
+  final String apiKey;
 
-  late String protocol;
+  final String protocol;
 
-  late String name;
+  final String name;
 
-  late bool allowInsecure;
+  final bool allowInsecure;
 
-  // Click'N'Load configuration (nullable - not configured by default)
-  String? clickNLoadIp;
+  /// Click'N'Load target, or null if Click'N'Load is not configured
+  final ClickNLoadServer? clickNLoad;
 
-  int? clickNLoadPort;
-
-  String? clickNLoadProtocol;
-
-  bool? clickNLoadAllowInsecure;
-
-  Server({
+  const Server({
     required this.ip,
     required this.port,
     required this.apiKey,
     required this.protocol,
     required this.allowInsecure,
     this.name = 'pyLoad',
-    this.clickNLoadIp,
-    this.clickNLoadPort,
-    this.clickNLoadProtocol,
-    this.clickNLoadAllowInsecure,
+    this.clickNLoad,
   });
 
+  /// Servers are identified by IP and port
+  ServerId get id => ServerId(ip, port);
+
   /// Check if Click'N'Load is configured for this server
-  bool get hasClickNLoad =>
-      clickNLoadIp != null &&
-      clickNLoadPort != null &&
-      clickNLoadProtocol != null &&
-      clickNLoadAllowInsecure != null;
-
-  /// Get a ClickNLoadServer instance from the configured properties
-  /// Returns null if Click'N'Load is not configured
-  ClickNLoadServer? get clickNLoadServer {
-    if (!hasClickNLoad) return null;
-    return ClickNLoadServer(
-      ip: clickNLoadIp!,
-      port: clickNLoadPort!,
-      protocol: clickNLoadProtocol!,
-      allowInsecureConnections: clickNLoadAllowInsecure!,
-    );
-  }
-
-  /// Configure Click'N'Load for this server
-  void configureClickNLoad({
-    required String ip,
-    required int port,
-    required String protocol,
-    required bool allowInsecureConnections,
-  }) {
-    clickNLoadIp = ip;
-    clickNLoadPort = port;
-    clickNLoadProtocol = protocol;
-    clickNLoadAllowInsecure = allowInsecureConnections;
-  }
-
-  /// Clear Click'N'Load configuration for this server
-  void clearClickNLoad() {
-    clickNLoadIp = null;
-    clickNLoadPort = null;
-    clickNLoadProtocol = null;
-    clickNLoadAllowInsecure = null;
-  }
+  bool get hasClickNLoad => clickNLoad != null;
 
   /// Get the base URL for this server
   String get baseUrl {
@@ -81,6 +39,9 @@ class Server {
   }
 
   /// Create a copy of this server with optional field overrides
+  ///
+  /// [clickNLoad] is a function so the configuration can also be cleared:
+  /// `copyWith(clickNLoad: () => null)`.
   Server copyWith({
     String? ip,
     int? port,
@@ -88,10 +49,7 @@ class Server {
     String? protocol,
     bool? allowInsecure,
     String? name,
-    String? clickNLoadIp,
-    int? clickNLoadPort,
-    String? clickNLoadProtocol,
-    bool? clickNLoadAllowInsecure,
+    ClickNLoadServer? Function()? clickNLoad,
   }) {
     return Server(
       ip: ip ?? this.ip,
@@ -100,11 +58,7 @@ class Server {
       protocol: protocol ?? this.protocol,
       allowInsecure: allowInsecure ?? this.allowInsecure,
       name: name ?? this.name,
-      clickNLoadIp: clickNLoadIp ?? this.clickNLoadIp,
-      clickNLoadPort: clickNLoadPort ?? this.clickNLoadPort,
-      clickNLoadProtocol: clickNLoadProtocol ?? this.clickNLoadProtocol,
-      clickNLoadAllowInsecure:
-          clickNLoadAllowInsecure ?? this.clickNLoadAllowInsecure,
+      clickNLoad: clickNLoad != null ? clickNLoad() : this.clickNLoad,
     );
   }
 
@@ -124,14 +78,19 @@ class Server {
       'protocol': protocol,
       'name': name,
       'allowInsecure': allowInsecure,
-      'clickNLoadIp': clickNLoadIp,
-      'clickNLoadPort': clickNLoadPort,
-      'clickNLoadProtocol': clickNLoadProtocol,
-      'clickNLoadAllowInsecure': clickNLoadAllowInsecure,
+      'clickNLoadIp': clickNLoad?.ip,
+      'clickNLoadPort': clickNLoad?.port,
+      'clickNLoadProtocol': clickNLoad?.protocol,
+      'clickNLoadAllowInsecure': clickNLoad?.allowInsecureConnections,
     };
   }
 
   factory Server.fromJson(Map<String, dynamic> json) {
+    final clickNLoadIp = json['clickNLoadIp'] as String?;
+    final clickNLoadPort = json['clickNLoadPort'] as int?;
+    final clickNLoadProtocol = json['clickNLoadProtocol'] as String?;
+    final clickNLoadAllowInsecure = json['clickNLoadAllowInsecure'] as bool?;
+
     return Server(
       ip: json['ip'] as String,
       port: json['port'] as int,
@@ -139,10 +98,18 @@ class Server {
       protocol: json['protocol'] as String,
       name: json['name'] as String? ?? 'pyLoad',
       allowInsecure: json['allowInsecure'] as bool? ?? false,
-      clickNLoadIp: json['clickNLoadIp'] as String?,
-      clickNLoadPort: json['clickNLoadPort'] as int?,
-      clickNLoadProtocol: json['clickNLoadProtocol'] as String?,
-      clickNLoadAllowInsecure: json['clickNLoadAllowInsecure'] as bool?,
+      clickNLoad:
+          clickNLoadIp != null &&
+              clickNLoadPort != null &&
+              clickNLoadProtocol != null &&
+              clickNLoadAllowInsecure != null
+          ? ClickNLoadServer(
+              ip: clickNLoadIp,
+              port: clickNLoadPort,
+              protocol: clickNLoadProtocol,
+              allowInsecureConnections: clickNLoadAllowInsecure,
+            )
+          : null,
     );
   }
 
@@ -157,21 +124,9 @@ class Server {
           protocol == other.protocol &&
           allowInsecure == other.allowInsecure &&
           name == other.name &&
-          clickNLoadIp == other.clickNLoadIp &&
-          clickNLoadPort == other.clickNLoadPort &&
-          clickNLoadProtocol == other.clickNLoadProtocol &&
-          clickNLoadAllowInsecure == other.clickNLoadAllowInsecure;
+          clickNLoad == other.clickNLoad;
 
   @override
   int get hashCode =>
-      ip.hashCode ^
-      port.hashCode ^
-      apiKey.hashCode ^
-      protocol.hashCode ^
-      allowInsecure.hashCode ^
-      name.hashCode ^
-      clickNLoadIp.hashCode ^
-      clickNLoadPort.hashCode ^
-      clickNLoadProtocol.hashCode ^
-      clickNLoadAllowInsecure.hashCode;
+      Object.hash(ip, port, apiKey, protocol, allowInsecure, name, clickNLoad);
 }

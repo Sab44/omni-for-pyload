@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
@@ -121,8 +123,11 @@ void main() {
     test(
       'validateAndAddServer throws error when server already exists',
       () async {
-        when(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .thenAnswer((_) async => true);
+        when(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).thenAnswer((_) async => true);
 
         expect(
           () => viewModel.validateAndAddServer(
@@ -142,16 +147,22 @@ void main() {
           ),
         );
 
-        verify(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .called(1);
+        verify(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).called(1);
       },
     );
 
     test(
       'validateAndAddServer calls getServerStatus and addServer on success',
       () async {
-        when(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .thenAnswer((_) async => false);
+        when(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).thenAnswer((_) async => false);
 
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) async => ServerStatus(
@@ -183,16 +194,20 @@ void main() {
         expect(server.allowInsecure, true);
         expect(server.name, 'Test Server');
 
-        verify(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .called(1);
+        verify(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).called(1);
         verify(mockPyLoadApiRepository.getServerStatus(any)).called(1);
         verify(mockServerRepository.addServer(any)).called(1);
       },
     );
 
     test('validateAndAddServer defaults name to pyLoad when empty', () async {
-      when(mockServerRepository.serverExists('192.168.1.1', 8000))
-          .thenAnswer((_) async => false);
+      when(
+        mockServerRepository.serverExists(const ServerId('192.168.1.1', 8000)),
+      ).thenAnswer((_) async => false);
 
       when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
         (_) async => ServerStatus(
@@ -221,14 +236,19 @@ void main() {
       expect(server.ip, '192.168.1.1');
       expect(server.port, 8000);
 
-      verify(mockServerRepository.serverExists('192.168.1.1', 8000)).called(1);
+      verify(
+        mockServerRepository.serverExists(const ServerId('192.168.1.1', 8000)),
+      ).called(1);
     });
 
     test(
       'validateAndAddServer defaults name to pyLoad when only whitespace',
       () async {
-        when(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .thenAnswer((_) async => false);
+        when(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).thenAnswer((_) async => false);
 
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) async => ServerStatus(
@@ -257,14 +277,18 @@ void main() {
         expect(server.ip, '192.168.1.1');
         expect(server.port, 8000);
 
-        verify(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .called(1);
+        verify(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).called(1);
       },
     );
 
     test('validateAndAddServer trims server name', () async {
-      when(mockServerRepository.serverExists('192.168.1.1', 8000))
-          .thenAnswer((_) async => false);
+      when(
+        mockServerRepository.serverExists(const ServerId('192.168.1.1', 8000)),
+      ).thenAnswer((_) async => false);
 
       when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
         (_) async => ServerStatus(
@@ -295,8 +319,11 @@ void main() {
     test(
       'validateAndAddServer verifies server connection before adding',
       () async {
-        when(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .thenAnswer((_) async => false);
+        when(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).thenAnswer((_) async => false);
 
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) async => ServerStatus(
@@ -371,8 +398,11 @@ void main() {
       'validateAndAddServer throws LocalNetworkAccessDeniedException '
       'without testing the connection when local network access is denied',
       () async {
-        when(mockServerRepository.serverExists('192.168.1.1', 8000))
-            .thenAnswer((_) async => false);
+        when(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.1', 8000),
+          ),
+        ).thenAnswer((_) async => false);
         when(mockLocalNetworkRepository.isAccessDenied(any))
             .thenAnswer((_) async => true);
 
@@ -412,10 +442,12 @@ void main() {
           protocol: 'http',
           allowInsecure: false,
           name: 'Home',
-          clickNLoadIp: '192.168.1.1',
-          clickNLoadPort: 9666,
-          clickNLoadProtocol: 'http',
-          clickNLoadAllowInsecure: false,
+          clickNLoad: const ClickNLoadServer(
+            ip: '192.168.1.1',
+            port: 9666,
+            protocol: 'http',
+            allowInsecureConnections: false,
+          ),
         );
         when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
           (_) async => ServerStatus(
@@ -474,9 +506,9 @@ void main() {
           expect(result.apiKey, 'new-key');
           expect(result.protocol, 'https');
           expect(result.allowInsecure, isTrue);
-          expect(result.clickNLoadPort, 9666);
+          expect(result.clickNLoad, original.clickNLoad);
           verify(mockPyLoadApiRepository.getServerStatus(result)).called(1);
-          verify(mockServerRepository.replaceServer(original, result))
+          verify(mockServerRepository.replaceServer(original.id, result))
               .called(1);
         },
       );
@@ -486,13 +518,16 @@ void main() {
         () async {
           await update(name: 'Office');
 
-          verifyNever(mockServerRepository.serverExists(any, any));
+          verifyNever(mockServerRepository.serverExists(any));
         },
       );
 
       test('rejects an IP and port used by another server', () async {
-        when(mockServerRepository.serverExists('192.168.1.2', 8000))
-            .thenAnswer((_) async => true);
+        when(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.2', 8000),
+          ),
+        ).thenAnswer((_) async => true);
 
         await expectLater(
           update(ip: '192.168.1.2'),
@@ -502,14 +537,18 @@ void main() {
       });
 
       test('accepts a new IP and port that is not in use', () async {
-        when(mockServerRepository.serverExists('192.168.1.2', 8080))
-            .thenAnswer((_) async => false);
+        when(
+          mockServerRepository.serverExists(
+            const ServerId('192.168.1.2', 8080),
+          ),
+        ).thenAnswer((_) async => false);
 
         final result = await update(ip: '192.168.1.2', port: '8080');
 
         expect(result.ip, '192.168.1.2');
         expect(result.port, 8080);
-        verify(mockServerRepository.replaceServer(original, result)).called(1);
+        verify(mockServerRepository.replaceServer(original.id, result))
+            .called(1);
       });
 
       test('applies the same field validation as adding', () async {
@@ -585,8 +624,11 @@ void main() {
       test(
         'addServerFromQrCode tests the connection and adds the server',
         () async {
-          when(mockServerRepository.serverExists('localhost', 8000))
-              .thenAnswer((_) async => false);
+          when(
+            mockServerRepository.serverExists(
+              const ServerId('localhost', 8000),
+            ),
+          ).thenAnswer((_) async => false);
           when(mockPyLoadApiRepository.getServerStatus(any)).thenAnswer(
             (_) async => ServerStatus(
               pause: false,
@@ -616,8 +658,11 @@ void main() {
       test(
         'addServerFromQrCode does not add the server if connection fails',
         () async {
-          when(mockServerRepository.serverExists('localhost', 8000))
-              .thenAnswer((_) async => false);
+          when(
+            mockServerRepository.serverExists(
+              const ServerId('localhost', 8000),
+            ),
+          ).thenAnswer((_) async => false);
           when(mockPyLoadApiRepository.getServerStatus(any))
               .thenThrow(ApiException(401, 'Unauthorized'));
 

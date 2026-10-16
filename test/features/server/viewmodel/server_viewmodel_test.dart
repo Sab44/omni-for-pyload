@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
@@ -390,6 +391,72 @@ void main() {
           .called(1);
       // Verify refresh happened (called twice: once for tab select, once for addPackage refresh)
       verify(mockPyLoadApiRepository.getQueue(server)).called(2);
+    });
+
+    group('server', () {
+      const clickNLoad = ClickNLoadServer(
+        ip: '192.168.1.5',
+        port: 9666,
+        protocol: 'https',
+        allowInsecureConnections: true,
+      );
+
+      test('reloadServer picks up changes saved elsewhere', () async {
+        final stored = server.copyWith(clickNLoad: () => clickNLoad);
+        when(mockServerRepository.getServer(server.id))
+            .thenAnswer((_) async => stored);
+        when(mockPyLoadApiRepository.getServerStatus(stored))
+            .thenAnswer((_) async => throw Exception('offline'));
+        var notified = false;
+        viewModel.addListener(() => notified = true);
+
+        await viewModel.reloadServer();
+
+        expect(viewModel.server, stored);
+        expect(viewModel.hasClickNLoadConfigured, isTrue);
+        expect(notified, isTrue);
+      });
+
+      test('reloadServer keeps the server if it no longer exists', () async {
+        when(mockServerRepository.getServer(server.id))
+            .thenAnswer((_) async => null);
+
+        await viewModel.reloadServer();
+
+        expect(viewModel.server, server);
+      });
+
+      test('configureClickNLoad persists a new server snapshot', () async {
+        final success = await viewModel.configureClickNLoad(
+          ip: '192.168.1.5',
+          port: 9666,
+          protocol: 'https',
+          allowInsecureConnections: true,
+        );
+
+        final expected = server.copyWith(clickNLoad: () => clickNLoad);
+        expect(success, isTrue);
+        verify(mockServerRepository.updateServer(expected)).called(1);
+        expect(viewModel.server, expected);
+        expect(viewModel.hasClickNLoadConfigured, isTrue);
+        expect(server.hasClickNLoad, isFalse);
+      });
+
+      test('configureClickNLoad keeps the server if saving fails', () async {
+        when(mockServerRepository.updateServer(any))
+            .thenThrow(Exception('storage error'));
+
+        final success = await viewModel.configureClickNLoad(
+          ip: '192.168.1.5',
+          port: 9666,
+          protocol: 'https',
+          allowInsecureConnections: true,
+        );
+
+        expect(success, isFalse);
+        expect(viewModel.server, server);
+        expect(viewModel.hasClickNLoadConfigured, isFalse);
+      });
     });
   });
 }

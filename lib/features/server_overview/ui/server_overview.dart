@@ -220,9 +220,7 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Remove server?'),
-          content: Text(
-            'Are you sure you want to remove ${server.ip}:${server.port}?',
-          ),
+          content: Text('Are you sure you want to remove ${server.id}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -295,9 +293,8 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                       itemCount: _viewModel.servers.length,
                       itemBuilder: (context, index) {
                         final server = _viewModel.servers[index];
-                        final key = '${server.ip}:${server.port}';
                         final status =
-                            _viewModel.statuses[key] ?? 'fetching...';
+                            _viewModel.statuses[server.id] ?? 'fetching...';
                         final Color statusColor = _statusColor(status);
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12.0),
@@ -314,7 +311,7 @@ class _ServerOverviewScreenState extends State<ServerOverviewScreen>
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${server.protocol}://${server.ip}:${server.port}',
+                                  server.baseUrl,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ],

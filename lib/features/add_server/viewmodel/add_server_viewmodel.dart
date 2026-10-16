@@ -2,6 +2,7 @@ import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.d
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/models/server_id.dart';
 
 /// Thrown if iOS denies the app access to the server in the local network
 class LocalNetworkAccessDeniedException implements Exception {
@@ -140,7 +141,7 @@ class AddServerViewModel {
 
     await _testConnection(server);
 
-    await _serverRepository.replaceServer(original, server);
+    await _serverRepository.replaceServer(original.id, server);
 
     return server;
   }
@@ -200,9 +201,9 @@ class AddServerViewModel {
     }
 
     // Check if server with same IP and port already exists
-    final isSameServer = original?.ip == ip && original?.port == portNumber;
-    if (!isSameServer) {
-      final exists = await _serverRepository.serverExists(ip, portNumber);
+    final id = ServerId(ip, portNumber);
+    if (original?.id != id) {
+      final exists = await _serverRepository.serverExists(id);
       if (exists) {
         throw 'A server with this IP and port already exists';
       }

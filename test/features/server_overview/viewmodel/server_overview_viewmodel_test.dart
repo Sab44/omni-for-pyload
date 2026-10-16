@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
+import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/features/server_overview/viewmodel/server_overview_viewmodel.dart';
@@ -78,8 +79,9 @@ void main() {
       when(mockServerRepository.getAllServers())
           .thenAnswer((_) async => initialServers);
 
-      when(mockServerRepository.removeServer('192.168.1.1', 8000))
-          .thenAnswer((_) async => Future<void>.value());
+      when(
+        mockServerRepository.removeServer(const ServerId('192.168.1.1', 8000)),
+      ).thenAnswer((_) async => Future<void>.value());
 
       // Load servers first
       await viewModel.loadServers();
@@ -89,7 +91,9 @@ void main() {
       await viewModel.removeServer(server);
 
       expect(viewModel.servers, isEmpty);
-      verify(mockServerRepository.removeServer('192.168.1.1', 8000)).called(1);
+      verify(
+        mockServerRepository.removeServer(const ServerId('192.168.1.1', 8000)),
+      ).called(1);
     });
 
     test('polling updates status to online on success', () {
@@ -115,7 +119,10 @@ void main() {
         viewModel.loadServers();
         async.flushMicrotasks();
 
-        expect(viewModel.statuses['192.168.1.1:8000'], equals('online'));
+        expect(
+          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
+          equals('online'),
+        );
         // verify(mockPyLoadApiRepository.getServerStatus(any)).called(1); // Removed
 
         // Advance 2 seconds
@@ -135,7 +142,10 @@ void main() {
         viewModel.loadServers();
         async.flushMicrotasks();
 
-        expect(viewModel.statuses['192.168.1.1:8000'], equals('offline'));
+        expect(
+          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
+          equals('offline'),
+        );
 
         // Advance 2 seconds
         async.elapse(const Duration(seconds: 2, milliseconds: 100));
@@ -165,7 +175,10 @@ void main() {
         async.elapse(const Duration(seconds: 2, milliseconds: 100));
         async.flushMicrotasks();
 
-        expect(viewModel.statuses['192.168.1.1:8000'], equals('offline'));
+        expect(
+          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
+          equals('offline'),
+        );
 
         // Should poll immediately again (no 2s delay)
         // We verify it was called again immediately
@@ -195,7 +208,7 @@ void main() {
     test('removeServer triggers notifyListeners', () async {
       when(mockServerRepository.getAllServers())
           .thenAnswer((_) async => [server]);
-      when(mockServerRepository.removeServer(any, any))
+      when(mockServerRepository.removeServer(any))
           .thenAnswer((_) async => Future.value());
       // Keep the status request pending so polling does not notify listeners
       when(mockPyLoadApiRepository.getServerStatus(any))
@@ -261,13 +274,19 @@ void main() {
 
         viewModel.loadServers();
         async.flushMicrotasks();
-        expect(viewModel.statuses['192.168.1.1:8000'], 'offline');
+        expect(
+          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
+          'offline',
+        );
 
         stored = [edited];
         viewModel.loadServers();
         async.flushMicrotasks();
 
-        expect(viewModel.statuses.containsKey('192.168.1.1:8000'), isFalse);
+        expect(
+          viewModel.statuses.containsKey(const ServerId('192.168.1.1', 8000)),
+          isFalse,
+        );
       });
     });
 
@@ -283,7 +302,10 @@ void main() {
         viewModel.loadServers();
         async.flushMicrotasks();
 
-        expect(viewModel.statuses['192.168.1.1:8000'], 'offline');
+        expect(
+          viewModel.statuses[const ServerId('192.168.1.1', 8000)],
+          'offline',
+        );
       });
     });
   });

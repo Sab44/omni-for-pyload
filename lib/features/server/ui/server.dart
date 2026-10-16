@@ -284,12 +284,12 @@ class _ServerScreenState extends State<ServerScreen>
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            widget.server.name,
+            _viewModel.server.name,
             style: Theme.of(context).textTheme.titleMedium
                 ?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           Text(
-            '${widget.server.protocol}://${widget.server.ip}:${widget.server.port}',
+            _viewModel.server.baseUrl,
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(fontSize: 12),
           ),
@@ -563,13 +563,13 @@ class _ServerScreenState extends State<ServerScreen>
           error: _viewModel.error,
           selectedPackageIds: _viewModel.selectedPackageIds,
           isSelectionMode: _viewModel.isSelectionMode,
-          server: widget.server,
+          server: _viewModel.server,
           onToggleSelection: _viewModel.toggleSelection,
           onPackageTap: (packageId) {
             Navigator.pushNamed(
               context,
               '/download-detail',
-              arguments: {'server': widget.server, 'packageId': packageId},
+              arguments: {'server': _viewModel.server, 'packageId': packageId},
             );
           },
         );
@@ -580,13 +580,13 @@ class _ServerScreenState extends State<ServerScreen>
           error: _viewModel.error,
           selectedPackageIds: _viewModel.selectedPackageIds,
           isSelectionMode: _viewModel.isSelectionMode,
-          server: widget.server,
+          server: _viewModel.server,
           onToggleSelection: _viewModel.toggleSelection,
           onPackageTap: (packageId) {
             Navigator.pushNamed(
               context,
               '/download-detail',
-              arguments: {'server': widget.server, 'packageId': packageId},
+              arguments: {'server': _viewModel.server, 'packageId': packageId},
             );
           },
         );
@@ -596,6 +596,9 @@ class _ServerScreenState extends State<ServerScreen>
   }
 
   /// Navigate to settings screen, pass current server
+  ///
+  /// Settings saves its changes to the repository, so the server is re-read
+  /// when returning.
   Future<void> _navigateToSettings() async {
     await Navigator.pushNamed(
       context,
@@ -604,7 +607,8 @@ class _ServerScreenState extends State<ServerScreen>
         'server': _viewModel.server,
         'onStopClickNLoad': _viewModel.stopClickNLoad,
       },
-    ) as Server?;
+    );
+    await _viewModel.reloadServer();
   }
 
   void _showAddClickNLoadBottomSheet() {

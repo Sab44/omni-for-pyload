@@ -9,8 +9,12 @@ import 'dart:async' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
 import 'package:omni_for_pyload/domain/models/app_settings.dart' as _i2;
+import 'package:omni_for_pyload/domain/models/server.dart' as _i8;
+import 'package:omni_for_pyload/domain/models/server_id.dart' as _i9;
 import 'package:omni_for_pyload/domain/repositories/i_app_info_repository.dart'
     as _i5;
+import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart'
+    as _i7;
 import 'package:omni_for_pyload/domain/repositories/i_settings_repository.dart'
     as _i3;
 
@@ -77,4 +81,69 @@ class MockIAppInfoRepository extends _i1.Mock
       _i6.dummyValue<String>(this, Invocation.method(#getAppVersion, [])),
     ),
   ) as _i4.Future<String>);
+}
+
+/// A class which mocks [IServerRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockIServerRepository extends _i1.Mock implements _i7.IServerRepository {
+  MockIServerRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<List<_i8.Server>> getAllServers() => (super.noSuchMethod(
+    Invocation.method(#getAllServers, []),
+    returnValue: _i4.Future<List<_i8.Server>>.value(<_i8.Server>[]),
+  ) as _i4.Future<List<_i8.Server>>);
+
+  @override
+  _i4.Future<_i8.Server?> getServer(_i9.ServerId? id) => (super.noSuchMethod(
+    Invocation.method(#getServer, [id]),
+    returnValue: _i4.Future<_i8.Server?>.value(),
+  ) as _i4.Future<_i8.Server?>);
+
+  @override
+  _i4.Future<void> addServer(_i8.Server? server) => (super.noSuchMethod(
+    Invocation.method(#addServer, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<bool> serverExists(_i9.ServerId? id) => (super.noSuchMethod(
+    Invocation.method(#serverExists, [id]),
+    returnValue: _i4.Future<bool>.value(false),
+  ) as _i4.Future<bool>);
+
+  @override
+  _i4.Future<void> removeServer(_i9.ServerId? id) => (super.noSuchMethod(
+    Invocation.method(#removeServer, [id]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> updateServer(_i8.Server? server) => (super.noSuchMethod(
+    Invocation.method(#updateServer, [server]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> replaceServer(
+    _i9.ServerId? originalId,
+    _i8.Server? updated,
+  ) => (super.noSuchMethod(
+    Invocation.method(#replaceServer, [originalId, updated]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> clearAllServers() => (super.noSuchMethod(
+    Invocation.method(#clearAllServers, []),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 }

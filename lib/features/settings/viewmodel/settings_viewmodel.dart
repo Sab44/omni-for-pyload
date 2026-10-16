@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:omni_for_pyload/domain/models/app_settings.dart' as app_models;
+import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_app_info_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_settings_repository.dart';
@@ -15,7 +16,7 @@ class SettingsViewModel extends ChangeNotifier {
   final IServerRepository? _serverRepository;
   final Future<void> Function()? _onClickNLoadConfigChanged;
   app_models.AppSettings _settings = const app_models.AppSettings();
-  final Server? _server;
+  Server? _server;
   String? _appVersion;
   bool _isDisposed = false;
 
@@ -89,34 +90,31 @@ class SettingsViewModel extends ChangeNotifier {
     String protocol,
     bool allowInsecureConnections,
   ) async {
-    if (_server == null || _serverRepository == null) return;
-
-    // Stop the Click'N'Load service before updating config
-    await _onClickNLoadConfigChanged?.call();
-
-    // Update the server with new Click'N'Load config
-    _server.configureClickNLoad(
-      ip: ip,
-      port: port,
-      protocol: protocol,
-      allowInsecureConnections: allowInsecureConnections,
+    await _saveClickNLoad(
+      ClickNLoadServer(
+        ip: ip,
+        port: port,
+        protocol: protocol,
+        allowInsecureConnections: allowInsecureConnections,
+      ),
     );
-
-    await _serverRepository.updateServer(_server);
-    notifyListeners();
   }
 
   /// Remove the Click'N'Load configuration from the server
-  Future<void> removeClickNLoadConfig() async {
-    if (_server == null || _serverRepository == null) return;
+  Future<void> removeClickNLoadConfig() => _saveClickNLoad(null);
 
-    // Stop the Click'N'Load service before removing config
+  /// Persist [clickNLoad] (null clears it) as the server's configuration
+  Future<void> _saveClickNLoad(ClickNLoadServer? clickNLoad) async {
+    final server = _server;
+    final serverRepository = _serverRepository;
+    if (server == null || serverRepository == null) return;
+
+    // Stop the Click'N'Load service so it is restarted with the new config
     await _onClickNLoadConfigChanged?.call();
 
-    // Clear the Click'N'Load configuration
-    _server.clearClickNLoad();
-
-    await _serverRepository.updateServer(_server);
+    final updated = server.copyWith(clickNLoad: () => clickNLoad);
+    await serverRepository.updateServer(updated);
+    _server = updated;
     notifyListeners();
   }
 }

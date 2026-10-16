@@ -8,8 +8,9 @@ import 'dart:async' as _i4;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:omni_for_pyload/domain/models/server.dart' as _i5;
+import 'package:omni_for_pyload/domain/models/server_id.dart' as _i6;
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart'
-    as _i6;
+    as _i7;
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart'
     as _i3;
 import 'package:openapi_client/api.dart' as _i2;
@@ -55,6 +56,12 @@ class MockIServerRepository extends _i1.Mock implements _i3.IServerRepository {
   ) as _i4.Future<List<_i5.Server>>);
 
   @override
+  _i4.Future<_i5.Server?> getServer(_i6.ServerId? id) => (super.noSuchMethod(
+    Invocation.method(#getServer, [id]),
+    returnValue: _i4.Future<_i5.Server?>.value(),
+  ) as _i4.Future<_i5.Server?>);
+
+  @override
   _i4.Future<void> addServer(_i5.Server? server) => (super.noSuchMethod(
     Invocation.method(#addServer, [server]),
     returnValue: _i4.Future<void>.value(),
@@ -62,14 +69,14 @@ class MockIServerRepository extends _i1.Mock implements _i3.IServerRepository {
   ) as _i4.Future<void>);
 
   @override
-  _i4.Future<bool> serverExists(String? ip, int? port) => (super.noSuchMethod(
-    Invocation.method(#serverExists, [ip, port]),
+  _i4.Future<bool> serverExists(_i6.ServerId? id) => (super.noSuchMethod(
+    Invocation.method(#serverExists, [id]),
     returnValue: _i4.Future<bool>.value(false),
   ) as _i4.Future<bool>);
 
   @override
-  _i4.Future<void> removeServer(String? ip, int? port) => (super.noSuchMethod(
-    Invocation.method(#removeServer, [ip, port]),
+  _i4.Future<void> removeServer(_i6.ServerId? id) => (super.noSuchMethod(
+    Invocation.method(#removeServer, [id]),
     returnValue: _i4.Future<void>.value(),
     returnValueForMissingStub: _i4.Future<void>.value(),
   ) as _i4.Future<void>);
@@ -82,12 +89,14 @@ class MockIServerRepository extends _i1.Mock implements _i3.IServerRepository {
   ) as _i4.Future<void>);
 
   @override
-  _i4.Future<void> replaceServer(_i5.Server? original, _i5.Server? updated) =>
-      (super.noSuchMethod(
-        Invocation.method(#replaceServer, [original, updated]),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> replaceServer(
+    _i6.ServerId? originalId,
+    _i5.Server? updated,
+  ) => (super.noSuchMethod(
+    Invocation.method(#replaceServer, [originalId, updated]),
+    returnValue: _i4.Future<void>.value(),
+    returnValueForMissingStub: _i4.Future<void>.value(),
+  ) as _i4.Future<void>);
 
   @override
   _i4.Future<void> clearAllServers() => (super.noSuchMethod(
@@ -101,7 +110,7 @@ class MockIServerRepository extends _i1.Mock implements _i3.IServerRepository {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockIPyLoadApiRepository extends _i1.Mock
-    implements _i6.IPyLoadApiRepository {
+    implements _i7.IPyLoadApiRepository {
   MockIPyLoadApiRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -186,32 +195,32 @@ class MockIPyLoadApiRepository extends _i1.Mock
       ) as _i4.Future<void>);
 
   @override
-  _i4.Future<_i6.Result> restartPackages(
+  _i4.Future<_i7.Result> restartPackages(
     _i5.Server? server,
     List<int>? packageIds,
   ) => (super.noSuchMethod(
     Invocation.method(#restartPackages, [server, packageIds]),
-    returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
-  ) as _i4.Future<_i6.Result>);
+    returnValue: _i4.Future<_i7.Result>.value(_i7.Result.success),
+  ) as _i4.Future<_i7.Result>);
 
   @override
-  _i4.Future<_i6.Result> movePackages(
+  _i4.Future<_i7.Result> movePackages(
     _i5.Server? server,
     List<int>? packageIds,
     _i2.Destination? destination,
   ) => (super.noSuchMethod(
     Invocation.method(#movePackages, [server, packageIds, destination]),
-    returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
-  ) as _i4.Future<_i6.Result>);
+    returnValue: _i4.Future<_i7.Result>.value(_i7.Result.success),
+  ) as _i4.Future<_i7.Result>);
 
   @override
-  _i4.Future<_i6.Result> extractPackages(
+  _i4.Future<_i7.Result> extractPackages(
     _i5.Server? server,
     List<int>? packageIds,
   ) => (super.noSuchMethod(
     Invocation.method(#extractPackages, [server, packageIds]),
-    returnValue: _i4.Future<_i6.Result>.value(_i6.Result.success),
-  ) as _i4.Future<_i6.Result>);
+    returnValue: _i4.Future<_i7.Result>.value(_i7.Result.success),
+  ) as _i4.Future<_i7.Result>);
 
   @override
   _i4.Future<void> pauseServer(_i5.Server? server) => (super.noSuchMethod(

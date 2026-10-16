@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:openapi_client/api.dart';
 import 'package:omni_for_pyload/data/repositories/click_n_load_repository.dart';
+import 'package:omni_for_pyload/domain/models/clicknload_server.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
@@ -49,6 +50,15 @@ class ServerViewModel extends ChangeNotifier {
   bool get isSelectionMode => _selectedPackageIds.isNotEmpty;
   String? get error => _error;
   ServerStatus? get serverStatus => _serverStatus;
+
+  /// Re-read the server from the repository, e.g. after its settings were
+  /// changed on another screen. Keeps the current server if it was removed.
+  Future<void> reloadServer() async {
+    final stored = await _serverRepository.getServer(_server.id);
+    if (stored == null || stored == _server) return;
+    _server = stored;
+    notifyListeners();
+  }
 
   void setSelectedTab(int index) {
     if (_isDisposed) return;
@@ -358,16 +368,16 @@ class ServerViewModel extends ChangeNotifier {
     required bool allowInsecureConnections,
   }) async {
     try {
-      // Update the server object with Click'N'Load configuration
-      _server.configureClickNLoad(
-        ip: ip,
-        port: port,
-        protocol: protocol,
-        allowInsecureConnections: allowInsecureConnections,
+      final updated = _server.copyWith(
+        clickNLoad: () => ClickNLoadServer(
+          ip: ip,
+          port: port,
+          protocol: protocol,
+          allowInsecureConnections: allowInsecureConnections,
+        ),
       );
-
-      // Persist the updated server
-      await _serverRepository.updateServer(_server);
+      await _serverRepository.updateServer(updated);
+      _server = updated;
 
       notifyListeners();
       return true;
@@ -396,13 +406,13 @@ class ServerViewModel extends ChangeNotifier {
         : ClickNLoadStartResult.failed;
   }
 
-  /// Initialize the Click'N'Load service if configured
+  /// Initialize the Click'N'Load service from the latest stored configuration
   Future<void> _initializeClickNLoadService() async {
-    _server = (await _serverRepository.getAllServers()).firstWhere(
-      (server) => server.ip == _server.ip && server.port == _server.port,
-    );
-    final clickNLoadServer = _server.clickNLoadServer;
-    if (clickNLoadServer != null) {
+    await reloadServer();
+    final clickNLoadServer = _server.clickNLoad;
+    if (clickNLoadServer == null) {
+      _clickNLoadService = null;
+    } else {
       _log.info(
         'Initializing Click\'N\'Load service with remote url '
         '${clickNLoadServer.baseUrl}',
