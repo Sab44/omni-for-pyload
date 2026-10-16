@@ -7,10 +7,6 @@ on:
         description: 'Create as prerelease?'
         required: false
         default: 'false'
-      altstore_description:
-        description: 'What''s new, shown in AltStore (use \n for line breaks). Defaults to a link to the release.'
-        required: false
-        default: ''
 
 jobs:
   check-version:
@@ -47,6 +43,26 @@ jobs:
             exit 1
           fi
           echo "$TAG has not been released yet"
+
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Changelog entries use the marketing version without build number (pubspec "1.2.3+4" -> "1.2.3")
+          APP_VERSION="${VERSION%%+*}"
+          mkdir -p release-notes
+          if ! .github/scripts/extract_release_notes.sh CHANGELOG.md "$APP_VERSION" > release-notes/github.md; then
+            echo "::error file=CHANGELOG.md::No release notes for $APP_VERSION. Add a section '## [$APP_VERSION] - <YYYY-MM-DD>' to CHANGELOG.md before releasing."
+            exit 1
+          fi
+          .github/scripts/extract_release_notes.sh CHANGELOG.md "$APP_VERSION" --plain > release-notes/altstore.txt
+          cat release-notes/github.md
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes/
 
   build-android:
     name: Build Android APK
@@ -136,13 +152,27 @@ jobs:
           name: ios-ipa
           path: artifacts/
 
+      - name: Download release notes artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes/
+
+      - name: Compose release body
+        run: |
+          {
+            cat release-notes/github.md
+            echo
+            echo '> **Note:** The iOS IPA is unsigned. You need AltStore or a similar sideloading tool to install it.'
+          } > release-notes/body.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.check-version.outputs.version }}
           name: Release v${{ needs.check-version.outputs.version }}
-          body: |
-            > **Note:** The iOS IPA is unsigned. You need AltStore or a similar sideloading tool to install it.
+          # GitHub appends the generated release notes below this body
+          body_path: release-notes/body.md
           generate_release_notes: true
           files: |
             artifacts/omni_for_pyload-${{ needs.check-version.outputs.version }}.apk
@@ -171,21 +201,25 @@ jobs:
           name: ios-ipa
           path: artifacts/
 
+      - name: Download release notes artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes/
+
       - name: Update AltStore source
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.check-version.outputs.version }}
-          DESCRIPTION: ${{ github.event.inputs.altstore_description }}
         run: |
           TAG="v$VERSION"
           IPA="omni_for_pyload-$VERSION.ipa"
 
           # Publish time and exact size of the uploaded IPA, as served by GitHub
-          RELEASE=$(gh release view "$TAG" --json publishedAt,assets,url)
+          RELEASE=$(gh release view "$TAG" --json publishedAt,assets)
           DATE=$(jq -r '.publishedAt' <<< "$RELEASE")
           SIZE=$(jq -r --arg name "$IPA" '.assets[] | select(.name == $name) | .size' <<< "$RELEASE")
           DOWNLOAD_URL=$(jq -r --arg name "$IPA" '.assets[] | select(.name == $name) | .url' <<< "$RELEASE")
-          RELEASE_URL=$(jq -r '.url' <<< "$RELEASE")
           if [[ -z "$SIZE" || -z "$DOWNLOAD_URL" ]]; then
             echo "::error::Asset $IPA not found in release $TAG"
             exit 1
@@ -201,8 +235,8 @@ jobs:
 
           # Marketing version without build number (pubspec "1.2.3+4" -> "1.2.3")
           APP_VERSION="${VERSION%%+*}"
-          DESCRIPTION="${DESCRIPTION//\\n/$'\n'}"
-          DESCRIPTION="${DESCRIPTION:-See the release notes: $RELEASE_URL}"
+          # Plain-text changelog entry; update_altstore_source.sh escapes it for JSON via jq
+          DESCRIPTION=$(cat release-notes/altstore.txt)
 
           .github/scripts/update_altstore_source.sh ios/AltStoreSource.json \
             com.downloader.omniForPyload "$APP_VERSION" "$DATE" "$SIZE" "$DOWNLOAD_URL" "$MIN_OS" "$DESCRIPTION"
