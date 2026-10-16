@@ -298,8 +298,9 @@ void main() {
         stored = [edited];
         viewModel.loadServers();
         async.flushMicrotasks();
-        async.elapse(const Duration(seconds: 2, milliseconds: 100));
+        verify(mockPyLoadApiRepository.getServerStatus(edited)).called(1);
 
+        async.elapse(const Duration(seconds: 2, milliseconds: 100));
         verify(mockPyLoadApiRepository.getServerStatus(edited)).called(1);
         verifyNever(mockPyLoadApiRepository.getServerStatus(server));
       });
@@ -332,6 +333,87 @@ void main() {
           viewModel.statuses.containsKey(const ServerId('192.168.1.1', 8000)),
           isFalse,
         );
+      });
+    });
+
+    test('nothing is fetched while paused', () {
+      fakeAsync((async) {
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server]);
+
+        viewModel.loadServers();
+        async.flushMicrotasks();
+        viewModel.pausePolling();
+        clearInteractions(mockPyLoadApiRepository);
+        async.elapse(const Duration(minutes: 1));
+
+        verifyNever(mockPyLoadApiRepository.getServerStatus(any));
+      });
+    });
+
+    test('resuming fetches right away, then every 2 seconds', () {
+      fakeAsync((async) {
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server]);
+        viewModel.loadServers();
+        async.flushMicrotasks();
+        viewModel.pausePolling();
+        async.elapse(const Duration(minutes: 1));
+        clearInteractions(mockPyLoadApiRepository);
+
+        viewModel.resumePolling();
+        async.flushMicrotasks();
+        verify(mockPyLoadApiRepository.getServerStatus(server)).called(1);
+
+        async.elapse(const Duration(seconds: 4));
+        verify(mockPyLoadApiRepository.getServerStatus(server)).called(2);
+      });
+    });
+
+    test('a removed server is no longer polled', () {
+      fakeAsync((async) {
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server]);
+        when(mockServerRepository.removeServer(any)).thenAnswer((_) async {});
+        // Created in fake time, so removing can stop Click'N'Load
+        final inFakeTime = ServerOverviewViewModel(
+          serverRepository: mockServerRepository,
+          pyLoadApiRepository: mockPyLoadApiRepository,
+          clickNLoadController: ClickNLoadController(
+            platform: FakeClickNLoadPlatform(),
+            serverRepository: mockServerRepository,
+          ),
+        );
+        inFakeTime.loadServers();
+        async.flushMicrotasks();
+
+        inFakeTime.removeServer(server);
+        async.flushMicrotasks();
+        clearInteractions(mockPyLoadApiRepository);
+        async.elapse(const Duration(minutes: 1));
+
+        verifyNever(mockPyLoadApiRepository.getServerStatus(any));
+        inFakeTime.dispose();
+      });
+    });
+
+    test('nothing is fetched after dispose', () {
+      fakeAsync((async) {
+        final disposed = ServerOverviewViewModel(
+          serverRepository: mockServerRepository,
+          pyLoadApiRepository: mockPyLoadApiRepository,
+          clickNLoadController: clickNLoadController,
+        );
+        when(mockServerRepository.getAllServers())
+            .thenAnswer((_) async => [server]);
+        disposed.loadServers();
+        async.flushMicrotasks();
+
+        disposed.dispose();
+        clearInteractions(mockPyLoadApiRepository);
+        async.elapse(const Duration(minutes: 1));
+
+        verifyNever(mockPyLoadApiRepository.getServerStatus(any));
       });
     });
 

@@ -18,11 +18,11 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 | Path | Contents |
 |---|---|
 | `lib/main.dart` | Entry: sets up DI, loads `AppSettings`, runs `App` |
-| `lib/core/` | `service_locator.dart` (get_it), `logging.dart` (root logger setup), `utils/` (`HttpClientFactory`, formatting) |
+| `lib/core/` | `service_locator.dart` (get_it), `logging.dart` (root logger setup), `polling/` (`Poller`, `ScreenVisibility` + global `routeObserver`), `utils/` (`HttpClientFactory`, formatting) |
 | `lib/domain/models/` | Plain immutable Dart models: `Server`, `ServerId`, `ClickNLoadServer`, `AppSettings` (manual `toJson`/`fromJson`/`copyWith`) |
 | `lib/domain/repositories/` | Repository interfaces (`I*Repository`) |
 | `lib/data/repositories/` | Implementations of the interfaces |
-| `lib/features/app.dart` | `MaterialApp`, light/dark themes, routes, global `themeNotifier` and `routeObserver` |
+| `lib/features/app.dart` | `MaterialApp`, light/dark themes, routes, global `themeNotifier` |
 | `lib/features/<feature>/ui/` | Screens and bottom sheets (StatefulWidgets) |
 | `lib/features/<feature>/viewmodel/` | `ChangeNotifier` view models |
 | `lib/features/<feature>/services/` | Services (see Architecture). `click_n_load/services/`: `ClickNLoadController` (app-scoped), `ClickNLoadProxy` (local HTTP server), `ClickNLoadPlatform` (native service port + Android adapter) |
@@ -67,13 +67,15 @@ Omni is a Flutter client for self-hosted [pyLoad](https://github.com/pyload/pylo
 
 ### Polling (no push/websocket)
 
-| Where | Interval |
+| Where | Interval (after the previous request finished) |
 |---|---|
 | Server status (`ServerViewModel`, `ServerOverviewViewModel`) | 2 s |
 | Active downloads tab | 1 s |
 | Queue / Collector tabs | 10 s |
 
-Only the selected tab polls. Polling pauses when the app is backgrounded or the route is covered (`routeObserver`). Timers are cancelled in `dispose`; view models guard with `_isDisposed`.
+- All polling runs through `Poller` (`core/polling/poller.dart`): fetch right away, then again one interval after each fetch finished (requests never overlap). `start`/`stop` choose what is polled, `pause`/`resume` follow visibility, `refresh` fetches now. Results of overtaken fetches are dropped, so nothing is delivered after `dispose`. `retryNowOn` skips the wait for matching errors (the overview retries right after a `PyLoadApiTimeout`).
+- `ServerViewModel` keeps one poller per `ServerTab` (`overview` / `queue` / `collector`, enum in `server/viewmodel/server_tab.dart`); only the selected tab's poller is started. Adding links or uploading a DLC refreshes the tab of that `Destination`. `ServerOverviewViewModel` keeps one poller per server, replaced when the server is edited.
+- Polling pauses when the app is backgrounded or the route is covered: screens mix in `ScreenVisibility` (app lifecycle + `routeObserver`) and forward `onVisibilityChanged` to the view model's `pausePolling` / `resumePolling`.
 
 ### Click'N'Load (Android only)
 

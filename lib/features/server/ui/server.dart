@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:omni_for_pyload/core/polling/screen_visibility.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/core/utils/format_utils.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
-import 'package:omni_for_pyload/features/app.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 import 'package:omni_for_pyload/features/click_n_load/ui/click_n_load_bottom_sheet.dart';
 import 'package:omni_for_pyload/features/server/ui/add_links_bottom_sheet.dart';
 import 'package:omni_for_pyload/features/server/ui/overview_tab.dart';
 import 'package:omni_for_pyload/features/server/ui/package_list_tab.dart';
 import 'package:omni_for_pyload/features/server/ui/upload_dlc_bottom_sheet.dart';
+import 'package:omni_for_pyload/features/server/viewmodel/server_tab.dart';
 import 'package:omni_for_pyload/features/server/viewmodel/server_viewmodel.dart';
+import 'package:openapi_client/api.dart';
 
 class ServerScreen extends StatefulWidget {
   final Server server;
@@ -22,8 +24,7 @@ class ServerScreen extends StatefulWidget {
   State<ServerScreen> createState() => _ServerScreenState();
 }
 
-class _ServerScreenState extends State<ServerScreen>
-    with WidgetsBindingObserver, RouteAware {
+class _ServerScreenState extends State<ServerScreen> with ScreenVisibility {
   static const String _menuResumeQueue = 'Resume Queue';
   static const String _menuPauseQueue = 'Pause Queue';
   static const String _menuStopQueue = 'Stop Queue';
@@ -33,13 +34,10 @@ class _ServerScreenState extends State<ServerScreen>
 
   late ServerViewModel _viewModel;
   bool _isFabExpanded = false;
-  bool _isScreenVisible = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-
     _viewModel = ServerViewModel(
       server: widget.server,
       pyLoadApiRepository: getIt<IPyLoadApiRepository>(),
@@ -47,14 +45,6 @@ class _ServerScreenState extends State<ServerScreen>
       clickNLoadController: getIt<ClickNLoadController>(),
     );
     _viewModel.addListener(_onViewModelChanged);
-    // Start polling immediately since the first tab (Overview) is selected by default
-    _viewModel.setSelectedTab(0);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
   }
 
   void _onViewModelChanged() {
@@ -63,39 +53,18 @@ class _ServerScreenState extends State<ServerScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    routeObserver.unsubscribe(this);
     _viewModel.removeListener(_onViewModelChanged);
     _viewModel.dispose();
     super.dispose();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.paused) {
-      // App went to background
+  void onVisibilityChanged(bool isVisible) {
+    if (isVisible) {
+      _viewModel.resumePolling();
+    } else {
       _viewModel.pausePolling();
-    } else if (state == AppLifecycleState.resumed) {
-      // App came to foreground - only resume if this screen is visible
-      if (_isScreenVisible) {
-        _viewModel.resumePolling();
-      }
     }
-  }
-
-  @override
-  void didPushNext() {
-    // User navigated away from this screen (e.g. to download detail)
-    _isScreenVisible = false;
-    _viewModel.pausePolling();
-  }
-
-  @override
-  void didPopNext() {
-    // User came back to this screen
-    _isScreenVisible = true;
-    _viewModel.resumePolling();
   }
 
   void _showSnackBar(String message) {
@@ -223,17 +192,19 @@ class _ServerScreenState extends State<ServerScreen>
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _viewModel.selectedTabIndex,
+        currentIndex: _viewModel.selectedTab.index,
         onTap: (index) {
           if (_isFabExpanded) {
             setState(() => _isFabExpanded = false);
           }
-          _viewModel.setSelectedTab(index);
+          _viewModel.setSelectedTab(ServerTab.values[index]);
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Overview'),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Queue'),
-          BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Collector'),
+        items: [
+          for (final tab in ServerTab.values)
+            BottomNavigationBarItem(
+              icon: Icon(_tabIcon(tab)),
+              label: _tabLabel(tab),
+            ),
         ],
       ),
     );
@@ -388,8 +359,7 @@ class _ServerScreenState extends State<ServerScreen>
               ),
             ];
 
-            if (_viewModel.selectedTabIndex == 1 ||
-                _viewModel.selectedTabIndex == 2) {
+            if (_viewModel.selectedTab.listsPackages) {
               items.add(const PopupMenuDivider());
               items.add(
                 const PopupMenuItem(
@@ -512,20 +482,19 @@ class _ServerScreenState extends State<ServerScreen>
             }
           },
           itemBuilder: (BuildContext context) {
-            final moveDestination = _viewModel.selectedTabIndex == 1
-                ? 'Collector'
-                : 'Queue';
+            final moveTarget = _viewModel.selectedTab.moveTarget;
             return [
-              PopupMenuItem(
-                value: 'Move',
-                child: Row(
-                  children: [
-                    const Icon(Icons.drive_file_move, color: Colors.black54),
-                    const SizedBox(width: 8),
-                    Text('Move to $moveDestination'),
-                  ],
+              if (moveTarget != null)
+                PopupMenuItem(
+                  value: 'Move',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.drive_file_move, color: Colors.black54),
+                      const SizedBox(width: 8),
+                      Text('Move to ${_tabLabel(moveTarget)}'),
+                    ],
+                  ),
                 ),
-              ),
               const PopupMenuItem(
                 value: 'Extract',
                 child: Row(
@@ -543,50 +512,52 @@ class _ServerScreenState extends State<ServerScreen>
     );
   }
 
+  static String _tabLabel(ServerTab tab) => switch (tab) {
+    ServerTab.overview => 'Overview',
+    ServerTab.queue => 'Queue',
+    ServerTab.collector => 'Collector',
+  };
+
+  static IconData _tabIcon(ServerTab tab) => switch (tab) {
+    ServerTab.overview => Icons.home,
+    ServerTab.queue => Icons.list,
+    ServerTab.collector => Icons.folder,
+  };
+
   Widget _buildTabContent() {
-    switch (_viewModel.selectedTabIndex) {
-      case 0:
-        return OverviewTab(
-          downloads: _viewModel.downloads,
-          error: _viewModel.error,
+    return switch (_viewModel.selectedTab) {
+      ServerTab.overview => OverviewTab(
+        downloads: _viewModel.downloads,
+        error: _viewModel.error,
+      ),
+      ServerTab.queue => _buildPackageListTab(
+        _viewModel.queueData,
+        'No packages in queue',
+      ),
+      ServerTab.collector => _buildPackageListTab(
+        _viewModel.collectorData,
+        'No packages in collector',
+      ),
+    };
+  }
+
+  Widget _buildPackageListTab(List<PackageData> packages, String emptyMessage) {
+    return PackageListTab(
+      packages: packages,
+      emptyMessage: emptyMessage,
+      error: _viewModel.error,
+      selectedPackageIds: _viewModel.selectedPackageIds,
+      isSelectionMode: _viewModel.isSelectionMode,
+      server: _viewModel.server,
+      onToggleSelection: _viewModel.toggleSelection,
+      onPackageTap: (packageId) {
+        Navigator.pushNamed(
+          context,
+          '/download-detail',
+          arguments: {'server': _viewModel.server, 'packageId': packageId},
         );
-      case 1:
-        return PackageListTab(
-          packages: _viewModel.queueData,
-          emptyMessage: 'No packages in queue',
-          error: _viewModel.error,
-          selectedPackageIds: _viewModel.selectedPackageIds,
-          isSelectionMode: _viewModel.isSelectionMode,
-          server: _viewModel.server,
-          onToggleSelection: _viewModel.toggleSelection,
-          onPackageTap: (packageId) {
-            Navigator.pushNamed(
-              context,
-              '/download-detail',
-              arguments: {'server': _viewModel.server, 'packageId': packageId},
-            );
-          },
-        );
-      case 2:
-        return PackageListTab(
-          packages: _viewModel.collectorData,
-          emptyMessage: 'No packages in collector',
-          error: _viewModel.error,
-          selectedPackageIds: _viewModel.selectedPackageIds,
-          isSelectionMode: _viewModel.isSelectionMode,
-          server: _viewModel.server,
-          onToggleSelection: _viewModel.toggleSelection,
-          onPackageTap: (packageId) {
-            Navigator.pushNamed(
-              context,
-              '/download-detail',
-              arguments: {'server': _viewModel.server, 'packageId': packageId},
-            );
-          },
-        );
-      default:
-        return const Center(child: Text('Overview Tab'));
-    }
+      },
+    );
   }
 
   /// Navigate to settings screen, pass current server

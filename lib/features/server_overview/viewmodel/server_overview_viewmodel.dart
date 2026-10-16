@@ -1,17 +1,17 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
+import 'package:omni_for_pyload/core/polling/poller.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/models/pyload_api_failure.dart';
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/server_id.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
-
-/// Outcome of a single status request
-enum _StatusCheck { online, offline, timedOut }
+import 'package:openapi_client/api.dart';
 
 class ServerOverviewViewModel extends ChangeNotifier {
+  static final _log = Logger('ServerOverviewViewModel');
+
   final IServerRepository _serverRepository;
   final IPyLoadApiRepository _pyLoadApiRepository;
   final ClickNLoadController _clickNLoadController;
@@ -20,11 +20,11 @@ class ServerOverviewViewModel extends ChangeNotifier {
   /// Status per server
   final Map<ServerId, String> _statuses = {};
 
-  /// Servers that currently have a polling loop running
-  final Set<ServerId> _pollingServers = {};
+  /// Status poller per server, polling the server as it was when created
+  final Map<ServerId, Poller<ServerStatus>> _pollers = {};
   bool _isDisposed = false;
   bool _isPaused = false;
-  final _serverStatusPollingInterval = Duration(seconds: 2);
+  final _serverStatusPollingInterval = const Duration(seconds: 2);
 
   ServerOverviewViewModel({
     required this._serverRepository,
@@ -35,11 +35,13 @@ class ServerOverviewViewModel extends ChangeNotifier {
   List<Server> get servers => _servers;
   Map<ServerId, String> get statuses => _statuses;
 
-  bool get _shouldPoll => !_isDisposed && !_isPaused;
-
   @override
   void dispose() {
     _isDisposed = true;
+    for (final poller in _pollers.values) {
+      poller.dispose();
+    }
+    _pollers.clear();
     super.dispose();
   }
 
@@ -50,70 +52,54 @@ class ServerOverviewViewModel extends ChangeNotifier {
   Future<void> loadServers() async {
     final previousServers = _servers;
     _servers = await _serverRepository.getAllServers();
-    _removeOutdatedStatuses(previousServers);
+    if (_isDisposed) return;
+    _updatePollers(previousServers);
     notifyListeners();
-    _startPolling();
   }
 
-  /// Removes the status of every server that was removed or edited since
-  /// [previousServers] was loaded. An edited server then shows as fetching
-  /// until it has been polled with its new settings.
-  void _removeOutdatedStatuses(List<Server> previousServers) {
-    _statuses.removeWhere((id, _) {
-      final currentServer = _findServer(_servers, id);
-      final previousServer = _findServer(previousServers, id);
-      final wasRemoved = currentServer == null;
-      final wasEdited = currentServer != previousServer;
-      return wasRemoved || wasEdited;
-    });
-  }
-
-  void _startPolling() {
+  /// Starts polling added and edited servers, stops polling removed ones.
+  ///
+  /// An edited server loses its status and shows as fetching until it has
+  /// been polled with its new settings; results of requests still running
+  /// with the old settings are dropped.
+  void _updatePollers(List<Server> previousServers) {
+    for (final id in _pollers.keys.toList()) {
+      final wasRemovedOrEdited =
+          _findServer(_servers, id) != _findServer(previousServers, id);
+      if (wasRemovedOrEdited) _stopPolling(id);
+    }
     for (final server in _servers) {
-      _pollServer(server.id);
+      if (!_pollers.containsKey(server.id)) _startPolling(server);
     }
   }
 
-  /// Polls the status of the server with [id] until polling is paused or the
-  /// server is removed. At most one loop runs per server.
-  Future<void> _pollServer(ServerId id) async {
-    if (_pollingServers.contains(id)) return;
-    _pollingServers.add(id);
-
-    while (_shouldPoll) {
-      // Look the server up on every iteration, so edits take effect
-      final server = _findServer(_servers, id);
-      if (server == null) break;
-
-      final result = await _checkStatus(server);
-      if (!_shouldPoll) break;
-
-      // If the server was edited while the request was running, the result
-      // belongs to the old settings. Discard it and check again right away.
-      final serverWasEdited = _findServer(_servers, id) != server;
-      if (serverWasEdited) continue;
-
-      _statuses[id] = result == _StatusCheck.online ? 'online' : 'offline';
-      notifyListeners();
-
+  void _startPolling(Server server) {
+    final poller = Poller<ServerStatus>(
+      interval: _serverStatusPollingInterval,
+      fetch: () => _pyLoadApiRepository.getServerStatus(server),
+      onData: (_) => _showStatus(server.id, 'online'),
+      onError: (error, stackTrace) {
+        if (error is! PyLoadApiFailure) {
+          _log.severe('Unexpected error while polling', error, stackTrace);
+        }
+        _showStatus(server.id, 'offline');
+      },
       // After a timeout, check again right away
-      if (result != _StatusCheck.timedOut) {
-        await Future.delayed(_serverStatusPollingInterval);
-      }
-    }
-
-    _pollingServers.remove(id);
+      retryNowOn: (error) => error is PyLoadApiTimeout,
+    );
+    _pollers[server.id] = poller;
+    if (_isPaused) poller.pause();
+    poller.start();
   }
 
-  Future<_StatusCheck> _checkStatus(Server server) async {
-    try {
-      await _pyLoadApiRepository.getServerStatus(server);
-      return _StatusCheck.online;
-    } on PyLoadApiTimeout {
-      return _StatusCheck.timedOut;
-    } on PyLoadApiFailure {
-      return _StatusCheck.offline;
-    }
+  void _stopPolling(ServerId id) {
+    _pollers.remove(id)?.dispose();
+    _statuses.remove(id);
+  }
+
+  void _showStatus(ServerId id, String status) {
+    _statuses[id] = status;
+    notifyListeners();
   }
 
   /// Remove [server] from storage and the list, stopping Click'N'Load if it
@@ -122,20 +108,23 @@ class ServerOverviewViewModel extends ChangeNotifier {
     await _clickNLoadController.stopFor(server.id);
     await _serverRepository.removeServer(server.id);
     _servers.removeWhere((s) => s.id == server.id);
-    _statuses.remove(server.id);
+    _stopPolling(server.id);
     notifyListeners();
   }
 
   /// Pause polling for all servers
   void pausePolling() {
     _isPaused = true;
+    for (final poller in _pollers.values) {
+      poller.pause();
+    }
   }
 
   /// Resume polling for all servers
   void resumePolling() {
-    if (_isPaused) {
-      _isPaused = false;
-      _startPolling();
+    _isPaused = false;
+    for (final poller in _pollers.values) {
+      poller.resume();
     }
   }
 }

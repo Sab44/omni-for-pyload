@@ -1,3 +1,4 @@
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -10,6 +11,7 @@ import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_controller.dart';
 import 'package:omni_for_pyload/features/click_n_load/services/click_n_load_proxy.dart';
+import 'package:omni_for_pyload/features/server/viewmodel/server_tab.dart';
 import 'package:omni_for_pyload/features/server/viewmodel/server_viewmodel.dart';
 import 'package:openapi_client/api.dart';
 
@@ -36,12 +38,13 @@ void main() {
       ),
     );
 
-    ServerViewModel createViewModel() => ServerViewModel(
-      server: server,
-      pyLoadApiRepository: mockPyLoadApiRepository,
-      serverRepository: mockServerRepository,
-      clickNLoadController: clickNLoadController,
-    );
+    ServerViewModel createViewModel({ClickNLoadController? controller}) =>
+        ServerViewModel(
+          server: server,
+          pyLoadApiRepository: mockPyLoadApiRepository,
+          serverRepository: mockServerRepository,
+          clickNLoadController: controller ?? clickNLoadController,
+        );
 
     setUp(() {
       mockPyLoadApiRepository = MockIPyLoadApiRepository();
@@ -88,7 +91,7 @@ void main() {
     });
 
     test('initial state is correct', () {
-      expect(viewModel.selectedTabIndex, 0);
+      expect(viewModel.selectedTab, ServerTab.overview);
       expect(viewModel.downloads, isEmpty);
       expect(viewModel.queueData, isEmpty);
       expect(viewModel.collectorData, isEmpty);
@@ -107,19 +110,19 @@ void main() {
           .thenAnswer((_) async => []);
 
       // Tab 0 (Overview) - already selected by default, but let's verify behavior
-      viewModel.setSelectedTab(0);
-      expect(viewModel.selectedTabIndex, 0);
+      viewModel.setSelectedTab(ServerTab.overview);
+      expect(viewModel.selectedTab, ServerTab.overview);
       verify(mockPyLoadApiRepository.getDownloadStatus(server))
           .called(greaterThan(0));
 
       // Tab 1 (Queue)
-      viewModel.setSelectedTab(1);
-      expect(viewModel.selectedTabIndex, 1);
+      viewModel.setSelectedTab(ServerTab.queue);
+      expect(viewModel.selectedTab, ServerTab.queue);
       verify(mockPyLoadApiRepository.getQueue(server)).called(1);
 
       // Tab 2 (Collector)
-      viewModel.setSelectedTab(2);
-      expect(viewModel.selectedTabIndex, 2);
+      viewModel.setSelectedTab(ServerTab.collector);
+      expect(viewModel.selectedTab, ServerTab.collector);
       verify(mockPyLoadApiRepository.getCollector(server)).called(1);
     });
 
@@ -127,7 +130,7 @@ void main() {
       when(mockPyLoadApiRepository.getDownloadStatus(server))
           .thenThrow(const PyLoadApiUnauthorized());
 
-      viewModel.setSelectedTab(0);
+      viewModel.setSelectedTab(ServerTab.overview);
       await Future.delayed(Duration.zero);
 
       expect(
@@ -156,22 +159,26 @@ void main() {
       expect(viewModel.isSelectionMode, false);
     });
 
-    test('deleteSelectedPackages calls repository and clears selection', () async {
-      viewModel.toggleSelection(1);
-      viewModel.toggleSelection(2);
+    test(
+      'deleteSelectedPackages calls repository and clears selection',
+      () async {
+        viewModel.toggleSelection(1);
+        viewModel.toggleSelection(2);
 
-      when(mockPyLoadApiRepository.deletePackages(server, [1, 2]))
-          .thenAnswer((_) async => {});
-      // Mock getDownloadStatus because setSelectedTab(0) is called after delete
-      when(mockPyLoadApiRepository.getDownloadStatus(server))
-          .thenAnswer((_) async => []);
+        when(mockPyLoadApiRepository.deletePackages(server, [1, 2]))
+            .thenAnswer((_) async => {});
+        // Mock getDownloadStatus because setSelectedTab(ServerTab.overview) is called after delete
+        when(mockPyLoadApiRepository.getDownloadStatus(server))
+            .thenAnswer((_) async => []);
 
-      final result = await viewModel.deleteSelectedPackages();
+        final result = await viewModel.deleteSelectedPackages();
 
-      expect(result, true);
-      verify(mockPyLoadApiRepository.deletePackages(server, [1, 2])).called(1);
-      expect(viewModel.selectedPackageIds, isEmpty);
-    });
+        expect(result, true);
+        verify(mockPyLoadApiRepository.deletePackages(server, [1, 2]))
+            .called(1);
+        expect(viewModel.selectedPackageIds, isEmpty);
+      },
+    );
 
     test(
       'restartSelectedPackages calls repository and clears selection',
@@ -195,7 +202,7 @@ void main() {
       'moveSelectedPackages calls repository with correct destination',
       () async {
         // Test moving to Queue (when on Collector tab)
-        viewModel.setSelectedTab(2); // Collector tab
+        viewModel.setSelectedTab(ServerTab.collector); // Collector tab
         viewModel.toggleSelection(1);
 
         when(mockPyLoadApiRepository.getCollector(server))
@@ -335,7 +342,7 @@ void main() {
       ).thenAnswer((_) async => {});
 
       // If tab is 2 (Collector), it refreshes
-      viewModel.setSelectedTab(2);
+      viewModel.setSelectedTab(ServerTab.collector);
       when(mockPyLoadApiRepository.getCollector(server))
           .thenAnswer((_) async => []);
 
@@ -370,7 +377,7 @@ void main() {
       ).thenAnswer((_) async => 123);
 
       // If destination is Queue and tab is Queue, it refreshes
-      viewModel.setSelectedTab(1);
+      viewModel.setSelectedTab(ServerTab.queue);
       when(mockPyLoadApiRepository.getQueue(server))
           .thenAnswer((_) async => []);
 
@@ -407,7 +414,7 @@ void main() {
       ).thenAnswer((_) async => 123);
 
       // If destination is Queue and tab is Queue, it refreshes
-      viewModel.setSelectedTab(1);
+      viewModel.setSelectedTab(ServerTab.queue);
       when(mockPyLoadApiRepository.getQueue(server))
           .thenAnswer((_) async => []);
 
@@ -431,6 +438,118 @@ void main() {
           .called(1);
       // Verify refresh happened (called twice: once for tab select, once for addPackage refresh)
       verify(mockPyLoadApiRepository.getQueue(server)).called(2);
+    });
+
+    group('polling', () {
+      /// Runs [body] with a view model created inside fake time
+      ///
+      /// It gets its own Click'N'Load controller, since futures created in fake
+      /// time never complete for the real-time tearDown.
+      void withFakeTime(
+        void Function(FakeAsync async, ServerViewModel vm) body,
+      ) {
+        fakeAsync((async) {
+          final vm = createViewModel(controller: createClickNLoadController());
+          async.flushMicrotasks();
+          clearInteractions(mockPyLoadApiRepository);
+          body(async, vm);
+          vm.dispose();
+          async.flushMicrotasks();
+        });
+      }
+
+      test('the overview tab polls every second without being selected', () {
+        withFakeTime((async, vm) {
+          expect(vm.selectedTab, ServerTab.overview);
+
+          async.elapse(const Duration(seconds: 3));
+
+          verify(mockPyLoadApiRepository.getDownloadStatus(server)).called(3);
+          verifyNever(mockPyLoadApiRepository.getQueue(any));
+        });
+      });
+
+      test('the server status is polled every 2 seconds', () {
+        withFakeTime((async, vm) {
+          async.elapse(const Duration(seconds: 4));
+
+          verify(mockPyLoadApiRepository.getServerStatus(server)).called(2);
+          expect(vm.serverStatus?.speed, 100);
+        });
+      });
+
+      test('only the selected tab polls', () {
+        withFakeTime((async, vm) {
+          vm.setSelectedTab(ServerTab.queue);
+          async.flushMicrotasks();
+          verify(mockPyLoadApiRepository.getQueue(server)).called(1);
+          clearInteractions(mockPyLoadApiRepository);
+
+          async.elapse(const Duration(seconds: 20));
+
+          verify(mockPyLoadApiRepository.getQueue(server)).called(2);
+          verifyNever(mockPyLoadApiRepository.getDownloadStatus(any));
+          verifyNever(mockPyLoadApiRepository.getCollector(any));
+        });
+      });
+
+      test('nothing is fetched while paused', () {
+        withFakeTime((async, vm) {
+          vm.pausePolling();
+          vm.setSelectedTab(ServerTab.collector);
+          async.elapse(const Duration(minutes: 1));
+
+          verifyZeroInteractions(mockPyLoadApiRepository);
+        });
+      });
+
+      test('resuming on the queue tab fetches the queue every 10 seconds', () {
+        withFakeTime((async, vm) {
+          vm.setSelectedTab(ServerTab.queue);
+          vm.pausePolling();
+          async.elapse(const Duration(minutes: 1));
+          clearInteractions(mockPyLoadApiRepository);
+
+          vm.resumePolling();
+          async.flushMicrotasks();
+          verify(mockPyLoadApiRepository.getQueue(server)).called(1);
+          verify(mockPyLoadApiRepository.getServerStatus(server)).called(1);
+
+          async.elapse(const Duration(seconds: 20));
+          verify(mockPyLoadApiRepository.getQueue(server)).called(2);
+          verifyNever(mockPyLoadApiRepository.getDownloadStatus(any));
+        });
+      });
+
+      test('nothing is fetched after dispose', () {
+        fakeAsync((async) {
+          final vm = createViewModel(controller: createClickNLoadController());
+          vm.dispose();
+          clearInteractions(mockPyLoadApiRepository);
+
+          async.elapse(const Duration(minutes: 1));
+
+          verifyZeroInteractions(mockPyLoadApiRepository);
+        });
+      });
+
+      test('adding links to the shown tab refreshes it', () {
+        withFakeTime((async, vm) {
+          when(mockPyLoadApiRepository.addPackage(any, any, any, any))
+              .thenAnswer((_) async => 1);
+          vm.setSelectedTab(ServerTab.collector);
+          async.flushMicrotasks();
+          clearInteractions(mockPyLoadApiRepository);
+
+          vm.addPackageWithLinks('p', ['l'], '', Destination.QUEUE);
+          async.flushMicrotasks();
+          verifyNever(mockPyLoadApiRepository.getCollector(any));
+
+          vm.addPackageWithLinks('p', ['l'], '', Destination.COLLECTOR);
+          async.flushMicrotasks();
+          verify(mockPyLoadApiRepository.getCollector(server)).called(1);
+        });
+      });
     });
 
     group('server', () {

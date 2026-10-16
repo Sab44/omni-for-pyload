@@ -9,6 +9,7 @@ import 'settings/ui/settings_screen.dart';
 
 import 'package:omni_for_pyload/domain/models/server.dart';
 import 'package:omni_for_pyload/domain/models/app_settings.dart' as app_models;
+import 'package:omni_for_pyload/core/polling/screen_visibility.dart';
 import 'package:omni_for_pyload/core/service_locator.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 
@@ -16,9 +17,6 @@ import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 final ValueNotifier<app_models.ThemeMode> themeNotifier = ValueNotifier(
   app_models.ThemeMode.system,
 );
-
-// Global route observer for tracking navigation
-final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 class App extends StatefulWidget {
   final app_models.AppSettings initialSettings;
