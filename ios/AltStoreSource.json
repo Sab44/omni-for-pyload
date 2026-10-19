@@ -20,6 +20,14 @@
             ],
             "versions": [
                 {
+                    "version": "0.3.0",
+                    "date": "2026-10-19T13:15:24Z",
+                    "size": 7922327,
+                    "downloadURL": "https://github.com/Sab44/omni-for-pyload/releases/download/v0.3.0/omni_for_pyload-0.3.0.ipa",
+                    "localizedDescription": "• A server can now be added by scanning the QR code in pyLoad's API key pop-up.\n• Server configuration can now be edited in the overview.\n• iOS: detect if local network permission is missing, if yes send users to settings.\n• Improve error handling across the app.\n• A lot of other fixes and stability improvements.",
+                    "minOSVersion": "15.0"
+                },
+                {
                     "version": "0.2.2",
                     "date": "2026-10-08T12:08:44Z",
                     "size": 7761336,
