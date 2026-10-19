@@ -27,6 +27,9 @@ class LocalNetworkRepository implements ILocalNetworkRepository {
         'Local network access for ${server.ip}:${server.port}: $result',
       );
       return result == 'denied';
+    } on MissingPluginException catch (e, stackTrace) {
+      _log.warning('Local network access check is missing', e, stackTrace);
+      return false;
     } on PlatformException catch (e, stackTrace) {
       _log.warning('Failed to check local network access', e, stackTrace);
       return false;

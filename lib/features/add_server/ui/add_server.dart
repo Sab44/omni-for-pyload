@@ -5,7 +5,7 @@ import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.d
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/add_server/viewmodel/add_server_viewmodel.dart';
-import 'package:omni_for_pyload/features/error_dialog/ui/error_dialog.dart';
+import 'package:omni_for_pyload/features/add_server/ui/add_server_error_dialog.dart';
 
 /// Form to add a new server, or to edit [server] if given
 class AddServerScreen extends StatefulWidget {
@@ -62,24 +62,6 @@ class _AddServerScreenState extends State<AddServerScreen> {
     super.dispose();
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _handleSubmit() async {
     setState(() {
       _isLoading = true;
@@ -113,16 +95,7 @@ class _AddServerScreenState extends State<AddServerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        if (e is LocalNetworkAccessDeniedException) {
-          showErrorDialog(
-            context,
-            e.toString(),
-            actionLabel: 'Open Settings',
-            onAction: _viewModel.openAppSettings,
-          );
-        } else {
-          _showErrorDialog(e.toString());
-        }
+        showAddServerErrorDialog(context, e, _viewModel);
         setState(() {
           _isLoading = false;
         });

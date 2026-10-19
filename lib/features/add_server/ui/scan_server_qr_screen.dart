@@ -5,7 +5,7 @@ import 'package:omni_for_pyload/domain/repositories/i_local_network_repository.d
 import 'package:omni_for_pyload/domain/repositories/i_pyload_api_repository.dart';
 import 'package:omni_for_pyload/domain/repositories/i_server_repository.dart';
 import 'package:omni_for_pyload/features/add_server/viewmodel/add_server_viewmodel.dart';
-import 'package:omni_for_pyload/features/error_dialog/ui/error_dialog.dart';
+import 'package:omni_for_pyload/features/add_server/ui/add_server_error_dialog.dart';
 
 /// Scans a server configuration QR code from pyLoad's web UI and adds the
 /// server after a successful connection test
@@ -69,14 +69,7 @@ class _ScanServerQrScreenState extends State<ScanServerQrScreen> {
       setState(() {
         _isLoading = false;
       });
-      await showErrorDialog(
-        context,
-        e.toString(),
-        actionLabel: e is LocalNetworkAccessDeniedException
-            ? 'Open Settings'
-            : null,
-        onAction: _viewModel.openAppSettings,
-      );
+      await showAddServerErrorDialog(context, e, _viewModel);
       if (mounted) {
         Navigator.pop(context, false);
       }
