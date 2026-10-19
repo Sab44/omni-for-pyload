@@ -7,6 +7,14 @@ Each release needs an entry `## [<version>] - <YYYY-MM-DD>`, where `<version>` i
 entry for the to-be-released version is missing. Everything up to the next `## ` heading
 becomes the release notes on GitHub and the "What's new" text in AltStore.
 
+## [0.3.0] - 2026-10-19
+
+- A server can now be added by scanning the QR code in pyLoad's API key pop-up.
+- Server configuration can now be edited in the overview.
+- iOS: detect if local network permission is missing, if yes send users to settings.
+- Improve error handling across the app.
+- A lot of other fixes and stability improvements.
+
 ## [0.2.2] - 2026-10-08
 
 - Added app version to settings screen.
